@@ -32,9 +32,15 @@
 
 ## Архитектура
 
-- [Архитектура платформы](architecture.md)
+- [Архитектура платформы](architecture/index.md)
+- [Архитектурный подход — Event Sourcing, DDD, CQRS, стек](architecture/approach.md)
 - [Модель участников коллайвинга](coliving/members.md)
 - [Дома как группы](coliving/groups.md)
+
+## Приложения
+
+- [Tribe Landing (маркетинговый SPA)](apps/landing.md)
+- [Tribe Platform (основное SPA)](apps/platform.md)
 
 ## Модули
 
