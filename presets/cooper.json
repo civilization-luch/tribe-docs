@@ -1,0 +1,12 @@
+{
+  "name": "CoOper",
+  "label": "Кооператив",
+  "description": "Кооператив: паи, закупки, распределение прибыли",
+  "modules": ["membership", "registry", "billing", "treasury", "proposals", "content", "marketplace"],
+  "defaults": {
+    "membership.entry_mode": "approval",
+    "membership.roles": ["shareholder", "member", "board"],
+    "billing.currency": "KZT",
+    "registry.type": "shares"
+  }
+}

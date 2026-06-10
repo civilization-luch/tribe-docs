@@ -1,0 +1,11 @@
+{
+  "name": "CoSettle",
+  "label": "Поселение",
+  "description": "Совместное поселение: покупка земли, паи, инфраструктура",
+  "modules": ["membership", "registry", "treasury", "proposals", "tasks", "content", "documents"],
+  "defaults": {
+    "membership.entry_mode": "approval",
+    "treasury.funds": ["land", "infrastructure", "reserve"],
+    "documents.region": "PY"
+  }
+}

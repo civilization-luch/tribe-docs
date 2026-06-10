@@ -2,14 +2,24 @@
 
 Платформа-конструктор для самоуправляемых сообществ.
 
-## Продукты
+## Продукты (пресеты)
 
-- [CoLive](../VISION_CoLive.md) — платформа для управления коливингами
-- [CoSpace](../VISION_CoSpace.md) — платформа для совместных пространств
-- [CoSettle](../VISION_CoSettle.md) — платформа для совместных поселений
-- [CoGuild](../VISION_CoGuild.md) — платформа для тематических сообществ (школы, гильдии)
-- [CoOper](../VISION_CoOper.md) — платформа для кооперативов
-- [Tribe](../VISION.md) — общее видение платформы
+Каждый продукт — это пресет (набор модулей с настройками по умолчанию).
+
+- [CoLive](../VISION_CoLive.md) — коливинг
+- [CoSpace](../VISION_CoSpace.md) — пространства
+- [CoSettle](../VISION_CoSettle.md) — поселения
+- [CoGuild](../VISION_CoGuild.md) — гильдии
+- [CoOper](../VISION_CoOper.md) — кооперативы
+- [Tribe](../VISION.md) — общее видение
+
+| Пресет | Модули |
+|---|---|
+| **CoLive** | Membership, Billing, Bookings, Tasks, Treasury, Content, Proposals, Reputation, Documents |
+| **CoSpace** | Membership, Schedule, Bookings, Billing, Content, Proposals, Reputation, Documents |
+| **CoSettle** | Membership, Registry, Treasury, Proposals, Tasks, Content, Documents |
+| **CoGuild** | Membership, LMS, Tasks, Billing, Content, Proposals, Reputation, Documents |
+| **CoOper** | Membership, Registry, Billing, Treasury, Proposals, Content, Marketplace |
 
 ## Архитектура
 
