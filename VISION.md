@@ -56,3 +56,53 @@ Tribe управляется через Tribe. Сообщество разраб
 - **Documents** — контрибьюторские соглашения, лицензии
 
 Каждая новая фича сначала тестируется на собственном сообществе. Платформа живёт по тем же правилам, которые даёт пользователям.
+
+## Tribe Core: модель развёртывания
+
+Каждое сообщество может работать как изолированный инстанс со своим сервером, БД, доменом и брендом.
+
+### Single-tenant архитектура
+
+```
+Tribe Core (движок)
+  ├── presets/          — CoLive, CoSpace, CoSettle, CoGuild, CoOper
+  ├── modules/          — все модули
+  └── deploy/           — Docker Compose / Helm
+
+Один инстанс = одно сообщество.
+```
+
+### Модель распространения
+
+| | Community (OSS) | Premium |
+|---|---|---|
+| **Модули ядра** | Membership, Tasks, Content, Proposals, Reputation, Documents, Schedule | + Billing, Marketplace, LMS, Revenue, Registry |
+| **Пресеты** | CoLive, CoSpace | + CoSettle, CoGuild, CoOper |
+| **Лицензия** | Open source | Private / подписка |
+
+На старте всё в одном монорепозитории. Когда модули обкатаны — базовые уходят в открытый репозиторий, платные остаются приватными.
+
+### Фазы
+
+**Фаза 1 — монорепозиторий (сейчас)**
+```
+tribe/
+├── core/
+├── modules/     — все модули вместе
+├── presets/     — все пресеты
+└── apps/
+```
+Всё в одном репозитории, удобно для быстрого прототипирования и обкатки модулей.
+
+**Фаза 2 — разделение**
+```
+github.com/tribe/core        (public, OSS)
+  ├── modules/ — базовые (Membership, Tasks, Content…)
+  ├── presets/ — community-пресеты
+  └── core/
+
+github.com/tribe/premium     (private)
+  ├── modules/ — платные (Billing, Marketplace, LMS, Revenue…)
+  └── presets/ — premium-пресеты
+```
+Базовое сообщество может работать бесплатно. Деньги, курсы, маркетплейс — с лицензией.

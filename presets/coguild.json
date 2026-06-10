@@ -2,7 +2,11 @@
   "name": "CoGuild",
   "label": "Гильдия",
   "description": "Тематическое сообщество: курсы, проекты, менторство",
-  "modules": ["membership", "lms", "tasks", "billing", "content", "proposals", "reputation", "documents"],
+  "license": "mixed",
+  "modules": {
+    "community": ["membership", "tasks", "content", "proposals", "reputation", "documents"],
+    "premium": ["lms", "billing"]
+  },
   "defaults": {
     "membership.entry_mode": "approval",
     "membership.roles": ["expert", "mentor", "student", "guest"],

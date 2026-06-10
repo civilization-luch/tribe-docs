@@ -13,13 +13,22 @@
 - [CoOper](../VISION_CoOper.md) — кооперативы
 - [Tribe](../VISION.md) — общее видение
 
-| Пресет | Модули |
-|---|---|
-| **CoLive** | Membership, Billing, Bookings, Tasks, Treasury, Content, Proposals, Reputation, Documents |
-| **CoSpace** | Membership, Schedule, Bookings, Billing, Content, Proposals, Reputation, Documents |
-| **CoSettle** | Membership, Registry, Treasury, Proposals, Tasks, Content, Documents |
-| **CoGuild** | Membership, LMS, Tasks, Billing, Content, Proposals, Reputation, Documents |
-| **CoOper** | Membership, Registry, Billing, Treasury, Proposals, Content, Marketplace |
+| Пресет | Community модули | Premium модули |
+|---|---|---|
+| **CoLive** | Membership, Tasks, Content, Proposals, Reputation, Documents | Billing, Bookings, Treasury |
+| **CoSpace** | Membership, Schedule, Content, Proposals, Reputation, Documents | Bookings, Billing |
+| **CoSettle** | Membership, Proposals, Tasks, Content, Documents | Registry, Treasury |
+| **CoGuild** | Membership, Tasks, Content, Proposals, Reputation, Documents | LMS, Billing |
+| **CoOper** | Membership, Proposals, Content | Registry, Billing, Treasury, Marketplace |
+
+## Лицензирование модулей
+
+| Уровень | Модули | Репозиторий |
+|---|---|---|
+| **Community** (OSS) | Membership, Tasks, Content, Proposals, Reputation, Documents, Schedule | `github.com/tribe/core` (public) |
+| **Premium** | Billing, Bookings, Treasury, LMS, Marketplace, Revenue, Registry | `github.com/tribe/premium` (private) |
+
+На старте — монорепозиторий (`tribe/`), после обкатки — разделение на core + premium.
 
 ## Архитектура
 

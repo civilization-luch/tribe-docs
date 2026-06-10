@@ -2,7 +2,11 @@
   "name": "CoSpace",
   "label": "Пространство",
   "description": "Совместное пространство: расписание классов, бронь залов, абонементы",
-  "modules": ["membership", "schedule", "bookings", "billing", "content", "proposals", "reputation", "documents"],
+  "license": "mixed",
+  "modules": {
+    "community": ["membership", "schedule", "content", "proposals", "reputation", "documents"],
+    "premium": ["bookings", "billing"]
+  },
   "defaults": {
     "membership.entry_mode": "open",
     "billing.currency": "KZT",
