@@ -32,15 +32,11 @@ graph TB
             REQ[("Requests")]
         end
 
-        subgraph Agent["Agent (bot)"]
-            AG["Event-driven<br/>Request → Task<br/>Task Executor<br/>Self-healing"]
-        end
-
         subgraph Events["Event Bus"]
-            EB("События Platform")
+            EB("События сообществ")
         end
 
-        subgraph Core["Tribe Core (Event Sourcing)"]
+        subgraph PlatformCore["Tribe Core (Event Sourcing)"]
             PL["Platform-сообщество<br/>CoGuild-пресет"]
             TS["Tasks (баги / фичи / идеи)"]
             VL["Proposals (приоритеты)"]
@@ -49,6 +45,15 @@ graph TB
             PL --> VL
             PL --> BW
         end
+    end
+
+    subgraph Communities["Другие сообщества"]
+        CL["CoLive"]
+        SY["Synergy"]
+    end
+
+    subgraph Agents["Agent Service"]
+        AG["Per-community instances<br/>Request → Task<br/>Task Executor<br/>Self-healing"]
     end
 
     subgraph Monitor["Мониторинг"]
@@ -72,13 +77,16 @@ graph TB
     B3 --> API
     B4 --> API
     API --> REQ
-    REQ --> Agent
-    Agent --> EB
-    EB --> Agent
-    Agent --> TS
-    Core --> EB
-    Core --> Monitor
-    Monitor --> Agent
+    REQ --> AG
+    AG --> EB
+    EB --> AG
+    EB --> PL
+    EB --> CL
+    EB --> SY
+    PL --> Monitor
+    CL --> Monitor
+    SY --> Monitor
+    Monitor --> AG
 ```
 
 >*Примечание:* Landing SPA и Platform Frontend — пока два клиента к одному API. Будущее объединение или разделение бэкендов не определено.
@@ -128,14 +136,24 @@ Request — это черновик: неструктурированные да
 
 ## Agent
 
-Единый сервис, участник Platform-сообщества с ролью `bot`. Работает event-driven: подписан на события Platform (Event Bus) и реагирует по типу события.
+Per-community сервис. Каждое сообщество запускает своего Agent'а — отдельный инстанс (возможно self-hosted), со своим API-ключом к LLM, со своей ролью в сообществе.
+
+```
+Platform Agent        CoLive Agent          Synergy Agent
+  ├── bot             ├── bot                ├── bot
+  ├── API: OpenAI     ├── API: Claude        ├── API: local LLM
+  └── MCP: codebase   └── MCP: community     └── MCP: cycles
+```
+
+Подключение Agent'а к сообществу и его настройка — **TBD** (см. ниже).
 
 ### Статус в сообществе
 
-- Участник Platform с ролью `bot` (как любой другой участник)
-- На него назначаются Task
-- Имеет репутацию: растёт от успешно выполненных задач, падает от ошибок
-- Имеет доступ к codebase через MCP (как opencode)
+- Участник **своего** сообщества (роль пока не определена)
+- Отдельный инстанс на каждое сообщество
+- Назначается на Task как любой участник
+- Имеет собственную репутацию в каждом сообществе
+- Имеет доступ к данным сообщества через MCP
 
 ### Pipeline 1: Request → Task
 
@@ -196,11 +214,22 @@ Task создаётся, проходит обычный цикл (review, appro
 
 ### Технически
 
-- Единый сервис (встроенный модуль или отдельный микросервис)
-- Подписан на Event Bus Platform
+- Per-community сервис (отдельный инстанс на сообщество, возможно self-hosted)
+- Каждый инстанс подписан на Event Bus **своего** сообщества
+- Каждый инстанс использует свой API-ключ к LLM (настройка сообщества)
 - На старте — rules-based (ключевые слова, регулярные выражения)
 - В перспективе — LLM для классификации, поиска дубликатов и генерации кода
 - GitHub Action не является инициатором агента — только пост-шаг (линтер, тесты, форматирование)
+
+### Настройка Agent в сообществе (TBD)
+
+> Детали уточняются на этапе реализации.
+
+| Вариант | Суть |
+|---|---|
+| **Админ-панель** | Владелец / админ сообщества включает Agent, выбирает модель, вводит API-ключ |
+| **Proposals** | Сообщество голосует за подключение Agent'а и его функций |
+| **Гибрид** | Включение через Proposals, API-ключи в админ-панели |
 
 ### Схема потоков
 
