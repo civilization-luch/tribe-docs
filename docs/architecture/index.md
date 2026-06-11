@@ -142,7 +142,8 @@ tribe/
 │   ├── cospace.json
 │   ├── cosettle.json
 │   ├── coguild.json
-│   └── cooper.json
+│   ├── cooper.json
+│   └── synergy.json
 ├── apps/                    # фронтенды / мобилки
 ├── docs/                    # документация
 └── deployments/             # инфраструктура

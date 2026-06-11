@@ -1,0 +1,15 @@
+{
+  "name": "Synergy",
+  "label": "Синергия",
+  "description": "Замкнутый цикл: ресурсы → продукт → доход → ресурсы",
+  "license": "mixed",
+  "modules": {
+    "community": ["membership", "tasks", "proposals", "reputation", "documents"],
+    "premium": ["treasury", "billing", "marketplace", "revenue"]
+  },
+  "defaults": {
+    "membership.entry_mode": "vouch",
+    "membership.roles": ["guarantor", "participant", "observer"],
+    "billing.currency": "KZT"
+  }
+}

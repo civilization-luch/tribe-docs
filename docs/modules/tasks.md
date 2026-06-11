@@ -44,4 +44,5 @@
 
 - С [Reputation](reputation.md) — бонусы за выполнение задач
 - С [Content](content.md) — объявления о дежурствах
+- С [Projects](projects.md) — группировка задач в проекты и milestones
 - С [Groups](../coliving/groups.md) — задачи в рамках дома

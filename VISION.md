@@ -1,6 +1,6 @@
 # Tribe — Vision Document
 
-> **Продукты:** CoLive (коливинги) · CoSpace (пространства) · CoSettle (поселения) · CoGuild (гильдии) · CoOper (кооперативы)
+> **Продукты:** CoLive (коливинги) · CoSpace (пространства) · CoSettle (поселения) · CoGuild (гильдии) · CoOper (кооперативы) · Synergy (синергетические циклы)
 > *Зонтичная структура опциональна — может быть пересмотрена.*
 
 ## Миссия
@@ -60,6 +60,7 @@
 Tribe управляется через Tribe. Сообщество разработчиков платформы работает как обычный пресет CoGuild:
 
 - **Tasks** — баги, фичи, задачи по всем Co* продуктам
+- **Projects** — группировка комплексных фич, milestones
 - **Proposals** — голосования по приоритетам развития, приём контрибьюторов
 - **Treasury** — бюджет на разработку, хостинг, инструменты
 - **Billing** — оплата контрибьюторам, спонсорские поступления
@@ -70,6 +71,8 @@ Tribe управляется через Tribe. Сообщество разраб
 
 Каждая новая фича сначала тестируется на собственном сообществе. Платформа живёт по тем же правилам, которые даёт пользователям.
 
+Инфраструктура управления платформой (Request → Agent → Task, Platform-сообщество, мониторинг, боты) описана в [docs/architecture/platform-ecosystem.md](docs/architecture/platform-ecosystem.md).
+
 ## Tribe Core: модель развёртывания
 
 Каждое сообщество может работать как изолированный инстанс со своим сервером, БД, доменом и брендом.
@@ -78,7 +81,7 @@ Tribe управляется через Tribe. Сообщество разраб
 
 ```
 Tribe Core (движок)
-  ├── presets/          — CoLive, CoSpace, CoSettle, CoGuild, CoOper
+  ├── presets/          — CoLive, CoSpace, CoSettle, CoGuild, CoOper, Synergy
   ├── modules/          — все модули
   └── deploy/           — Docker Compose / Helm
 
@@ -89,8 +92,8 @@ Tribe Core (движок)
 
 | | Community (OSS) | Premium |
 |---|---|---|
-| **Модули ядра** | Membership, Tasks, Content, Proposals, Reputation, Documents, Schedule | + Billing, Marketplace, LMS, Revenue, Registry |
-| **Пресеты** | CoLive, CoSpace | + CoSettle, CoGuild, CoOper |
+| **Модули ядра** | Membership, Tasks, Content, Proposals, Reputation, Documents, Schedule, Bookings, Treasury | + Billing, Marketplace, LMS, Revenue, Registry, Projects |
+| **Пресеты** | CoLive, CoSpace | + CoSettle, CoGuild, CoOper, Synergy |
 | **Лицензия** | Open source | Private / подписка |
 
 На старте всё в одном монорепозитории. Когда модули обкатаны — базовые уходят в открытый репозиторий, платные остаются приватными.

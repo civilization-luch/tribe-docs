@@ -54,7 +54,7 @@
 
 ## Связь с Tasks
 
-Projects — отдельный bounded context. Tasks модуль **не знает** о Projects.
+Projects — отдельный bounded context. Модуль [Tasks](tasks.md) **не знает** о Projects.
 
 ```
 Projects (Event Store)
