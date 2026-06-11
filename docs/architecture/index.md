@@ -7,8 +7,9 @@ graph TB
         P2["Пресет CoSpace<br/>8 модулей"]
         P3["Пресет CoSettle<br/>7 модулей"]
         P4["Пресет CoGuild<br/>8 модулей"]
-        P5["Пресет CoOper<br/>7 модулей"]
-    end
+    P5["Пресет CoOper<br/>7 модулей"]
+    P6["Пресет Synergy<br/>9 модулей"]
+end
 
     subgraph Engine["Platform Core"]
         CE["Core Engine<br/>API / Auth / RBAC"]
@@ -51,6 +52,7 @@ graph TB
     P3 --> CE
     P4 --> CE
     P5 --> CE
+    P6 --> CE
 
     CE --> MR
     CE --> EE
@@ -99,6 +101,7 @@ graph TB
 | **CoSettle** | Membership, Registry, Treasury, Proposals, Tasks, Content, Documents |
 | **CoGuild** | Membership, LMS, Tasks, Billing, Content, Proposals, Reputation, Documents |
 | **CoOper** | Membership, Registry, Billing, Treasury, Proposals, Content, Marketplace |
+| **Synergy** | Membership, Treasury, Billing, Marketplace, Documents, Proposals, Tasks, Reputation, Revenue |
 
 ### 1. Platform Core
 
@@ -117,6 +120,10 @@ graph TB
 ### 4. Infrastructure
 
 PostgreSQL, S3-совместимое хранилище, очередь сообщений, CDN для фронтенда.
+
+### 5. Platform Ecosystem (новое)
+
+Система поверх ядра: сбор запросов от пользователей, Agent-фильтрация, Platform-сообщество для управления разработкой, боты и мониторинг. Подробно — в [platform-ecosystem.md](platform-ecosystem.md).
 
 ## Структура репозитория
 
