@@ -1,23 +1,40 @@
 # Community MCP Server
 
-MCP-сервер — прослойка между Agent'ом (opencode) и сообществом. Позволяет Agent'у читать данные сообщества и совершать действия через MCP-инструменты.
+MCP-сервер — прослойка между opencode serve и сообществом Tribe. Позволяет Agent'у читать данные сообщества и совершать действия через MCP-инструменты.
 
 ## Протокол
 
 Стандартный [MCP](https://modelcontextprotocol.io) (JSON-RPC 2.0).
 
-- **Transport:** stdio (при запуске opencode с `--mcp`) или HTTP (для внешних вызовов)
+- **Transport:** HTTP (remote MCP)
+- **Transport (альтернатива):** stdio (локальный запуск)
 - **Resources:** данные (только чтение)
 - **Tools:** действия (запись)
 
+## Подключение к opencode serve
+
+Community MCP Server подключается как **remote MCP** в `opencode.jsonc`:
+
+```jsonc
+{
+  "mcp": {
+    "community": {
+      "type": "remote",
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer {env:COMMUNITY_BOT_TOKEN}"
+      },
+      "enabled": true
+    }
+  }
+}
+```
+
+Opencode serve сам управляет подключением: загружает инструменты, вызывает их по необходимости, обрабатывает авторизацию. Никакой ручной интеграции не требуется.
+
 ## Авторизация
 
-Community MCP Server авторизуется как **bot-участник** сообщества через API-токен. Токен выдаётся при подключении Agent'а к сообществу (способ настройки — TBD, см. [platform-ecosystem.md](../architecture/platform-ecosystem.md#Настройка-Agent-в-сообществе-TBD)).
-
-```
-// Пример авторизации
-Authorization: Bearer <bot-token>
-```
+Community MCP Server авторизуется как **bot-участник** сообщества через API-токен. Токен передаётся в заголовке `Authorization` (см. конфиг выше).
 
 Токен определяет:
 - Какое сообщество
@@ -49,62 +66,67 @@ Authorization: Bearer <bot-token>
 | `get_member_reputation` | `member_id` | Репутация участника |
 | `notify` | `channel`, `message` | Отправить уведомление (Telegram, чат сообщества) |
 
-## Использование с opencode
+## Использование в Agent'ах
 
-Opencode поддерживает MCP через флаг `--mcp`. Community MCP Server запускается как подпроцесс.
+Когда opencode загружает Community MCP, его инструменты и ресурсы автоматически доступны Agent'ам. В промпте agent'а достаточно указать:
 
-```bash
-opencode \
-  --task "Исправить ошибку в модуле billing" \
-  --mcp community-mcp-server \
-  --mcp filesystem
+```
+Используй инструменты community MCP:
+- search_tasks — найти похожие задачи
+- get_task — прочитать детали задачи
+- create_task — создать новую задачу
+- update_task — обновить статус
 ```
 
-Внутри opencode Agent может:
+Opencode сам решает, когда вызывать MCP-инструменты. Никакой дополнительной обвязки не нужно.
 
-1. Через `community://tasks/{id}` — прочитать описание задачи и browser_context
-2. Через `community://metrics` — проверить метрики до/после
-3. Через `search_tasks` — найти похожие задачи (дедупликация)
-4. Через `create_task` — создать подзадачу или связанную задачу
-5. Через `update_task` — изменить статус на `review` после создания PR
+## Примеры вызовов из Thin Coordinator
 
-### Пример вызова из координатора
+### Pipeline 1: Request → Task
 
 ```python
-# Agent Coordinator: обработка события TaskAssigned
-task = get_task_details(event.task_id)
-context = read_mcp_resource(f"community://tasks/{event.task_id}")
-
-subprocess.run([
-    "opencode",
-    "--task", task.description,
-    "--mcp", "community-mcp-server",
-    "--mcp", "filesystem",
-    "--yes"
-])
-
-# После выполнения — обновить статус
-call_mcp_tool("update_task", {
-    "task_id": event.task_id,
-    "status": "review",
-    "comment": "PR created: https://github.com/.../pull/42"
+requests.post(f"{OPENCODE_URL}/session/{session_id}/message", json={
+    "parts": [{"type": "text", "text": request.text}],
+    "agent": "classifier",
+    "noReply": True
 })
 ```
+
+Agent `@classifier` через community MCP:
+1. `search_tasks` — ищет дубликаты
+2. `create_task` — создаёт Task, если дубликатов нет
+
+### Pipeline 2: Task Executor
+
+```python
+requests.post(f"{OPENCODE_URL}/session/{session_id}/message", json={
+    "parts": [{"type": "text", "text": f"Выполни задачу {task_id}"}],
+    "agent": "task-executor",
+})
+```
+
+Agent `@task-executor`:
+1. `get_task` — читает описание и контекст
+2. Анализирует codebase
+3. Создаёт PR
+4. `update_task(status=review)` — обновляет статус
 
 ## Реализация
 
 Community MCP Server — тонкий слой (~200-300 строк), который:
 
-1. Принимает MCP-запросы (JSON-RPC)
+1. Принимает MCP-запросы (JSON-RPC over HTTP)
 2. Транслирует их в GraphQL-запросы к API сообщества
 3. Возвращает результат
 
 ```mermaid
 sequenceDiagram
-    Opencode->>CommunityMCP: get_task("task-123")
+    OpencodeServe->>CommunityMCP: list_tools
+    CommunityMCP-->>OpencodeServe: [get_task, search_tasks, create_task, ...]
+    OpencodeServe->>CommunityMCP: get_task("task-123")
     CommunityMCP->>TribeAPI: GraphQL query
     TribeAPI-->>CommunityMCP: task data
-    CommunityMCP-->>Opencode: MCP response
+    CommunityMCP-->>OpencodeServe: MCP response
 ```
 
-**Язык:** любой, который умеет HTTP + JSON (Python, Go, TypeScript). На старте — **Python** (быстро прототипировать) или **Go** (легче деплоить).
+**Язык:** Python, Go или TypeScript — любой с HTTP + JSON.

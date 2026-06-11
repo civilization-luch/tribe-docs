@@ -37,14 +37,17 @@
 | Компонент | Описание |
 |---|---|
 | **Requests** | форма/бот → сырой запрос |
-| **Agent Coordinator** | event listener, роутер пайплайнов |
-| **Community MCP Server** | MCP-прослойка для Agent'а |
-| **Pipeline 1: Request → Task** | LLM: classify, dedup, enrich |
-| **Pipeline 2: Task Executor** | opencode + Community MCP |
-| **Pipeline 3: Self-healing** | метрики → Task |
-| **Opencode** | CLI-зависимость для анализа кода и PR |
+| **Thin Coordinator** | event listener → HTTP-запросы к opencode serve |
+| **Community MCP Server** | remote MCP: данные и действия сообщества |
+| **Opencode serve** | headless сервер с agents + skills |
+| **Agent: `@classifier`** | Pipeline 1: Request → Task (classify, dedup, enrich) |
+| **Agent: `@task-executor`** | Pipeline 2: анализ кода, PR через opencode |
+| **Agent: `@self-healer`** | Pipeline 3: метрики → Task |
+| **Skills** | `classify-request`, `analyze-code`, `self-heal` — SKILL.md |
 
 **Готовность:** Agent подключён к сообществу. Видит задачи. Формулирует новые из Request. Выполняет назначенные Task. Создаёт self-healing Task по метрикам.
+
+**Что не нужно писать:** Coordinator — только коннектор (~100 строк). LLM-вызовы, контекст, MCP — всё в opencode serve.
 
 ---
 
@@ -66,5 +69,5 @@
 |---|---|
 | Язык бэкенда | Go / TypeScript (NestJS) / Rust |
 | Event Bus | NATS / RabbitMQ |
-| LLM для Pipeline 1 | OpenAI / Claude / local |
-| Opencode | CLI-зависимость (да/нет) |
+| LLM для Agent'ов | Определяется в `opencode.jsonc` (OpenAI, Claude, local — любой) |
+| Community MCP | Python / Go / TypeScript |
