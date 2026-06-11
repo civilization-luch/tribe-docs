@@ -127,6 +127,10 @@ PostgreSQL, S3-совместимое хранилище, очередь соо�
 
 Система поверх ядра: сбор запросов от пользователей, Agent-фильтрация, Platform-сообщество для управления разработкой, боты и мониторинг. Комплексные фичи группируются через модуль **Projects** (см. [projects.md](../modules/projects.md)). Подробно — в [platform-ecosystem.md](platform-ecosystem.md).
 
+## Roadmap
+
+Горизонты реализации, от Foundation до Agent MVP — в [roadmap.md](roadmap.md).
+
 ## Структура репозитория
 
 ```
