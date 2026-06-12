@@ -3,12 +3,45 @@
 ## Текущая структура
 
 ```
-App.vue                          # корень: навбар (email + logout) + <router-view>
-├── GuestLayout (не выделен)     # Login.vue, Register.vue
-└── AuthLayout (не выделен)      # Communities.vue — навбар с email/logout
+App.vue (switch по route.meta.layout)
+├── GuestLayout        # центрированная карточка (Login, Register)
+└── AuthLayout         # авторизованный пользователь
+    ├── Sidebar        # левая панель
+    │   ├── User       # email, logout, My Communities
+    │   └── Community  # только когда communityId в URL
+    │                  #   Home, Tasks & Projects
+    └── <router-view>  # контент страницы справа
 ```
 
-Сейчас App.vue выполняет роль и гостевого, и авторизованного лейаута — навбар скрыт, если нет токена.
+## Левая панель (AuthLayout)
+
+```
+┌──────────────────────┐
+│  ▓ USER              │
+│  email@example.com   │
+│  [Logout]            │
+│  ─────────────────── │
+│  My Communities →    │
+│                      │
+│  ▓ COMMUNITY         │  ← только когда communityId в URL
+│  Название            │
+│  ── Home             │
+│  ── Tasks & Projects │
+└──────────────────────┘
+```
+
+## Маршруты и лейауты
+
+| Путь | Компонент | Лейаут | Community context |
+|---|---|---|---|
+| `/login` | `Login.vue` | Guest | — |
+| `/register` | `Register.vue` | Guest | — |
+| `/` | → redirect `/communities` | — | — |
+| `/communities` | `CommunitiesList.vue` | Auth | Нет |
+| `/community/:communityId` | `CommunityHome.vue` | Auth | Да |
+| `/community/:communityId/projects` | `ProjectsView.vue` | Auth | Да |
+| `/community/:communityId/projects/:projectId` | `ProjectDetail.vue` | Auth | Да |
+
 
 ## План развития
 

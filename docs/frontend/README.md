@@ -21,15 +21,21 @@ apps/tribe-front/
 ├── tsconfig.json
 └── src/
     ├── main.ts              # точка входа
-    ├── App.vue              # корневой компонент + навбар
-    ├── router.ts            # маршруты
+    ├── App.vue              # switch лейаутов по route.meta.layout
+    ├── router.ts            # маршруты + beforeEach guard
+    ├── layouts/
+    │   ├── GuestLayout.vue  # центрированная карточка (login/register)
+    │   └── AuthLayout.vue   # левая панель (profile + community) + контент
     ├── api/
     │   ├── graphql.ts       # gql() — универсальный fetch к /graphql
-    │   └── types.ts         # TypeScript-типы (AuthPayload, Community, Member)
+    │   └── types.ts         # TypeScript-типы
     └── views/
         ├── Login.vue
         ├── Register.vue
-        └── Communities.vue
+        ├── CommunitiesList.vue
+        ├── CommunityHome.vue
+        ├── ProjectsView.vue
+        └── ProjectDetail.vue
 ```
 
 ## Документация
