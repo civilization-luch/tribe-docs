@@ -42,6 +42,13 @@
 - [Tribe Landing (маркетинговый SPA)](apps/landing.md)
 - [Tribe Platform (основное SPA)](apps/platform.md)
 
+## Frontend
+
+- [Стек и структура](frontend/README.md)
+- [UI Kit — компоненты, конвенции, план развития](frontend/ui-kit.md)
+- [Маршруты (screen map)](frontend/routing.md)
+- [Лейауты](frontend/layouts.md)
+
 ## Модули
 
 ### Ядро
