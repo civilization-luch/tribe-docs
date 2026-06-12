@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tasks & Projects Events",
+  "description": "Event contracts for the merged Tasks & Projects module",
+  "definitions": {
+    "ProjectCreated": {
+      "type": "object",
+      "properties": {
+        "aggregate_id": { "type": "string", "description": "Project ULID" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "owner_id": { "type": "string", "description": "User ULID" }
+      },
+      "required": ["aggregate_id", "name", "owner_id"]
+    },
+    "ProjectUpdated": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "ProjectArchived": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "MilestoneAdded": {
+      "type": "object",
+      "properties": {
+        "milestone_id": { "type": "string" },
+        "name": { "type": "string" },
+        "due_date": { "type": "string", "format": "date" }
+      },
+      "required": ["milestone_id", "name"]
+    },
+    "MilestoneReached": {
+      "type": "object",
+      "properties": {
+        "milestone_id": { "type": "string" }
+      },
+      "required": ["milestone_id"]
+    },
+    "TaskCreated": {
+      "type": "object",
+      "properties": {
+        "aggregate_id": { "type": "string", "description": "Task ULID" },
+        "project_id": { "type": "string", "description": "Project ULID or null" },
+        "milestone_id": { "type": "string", "description": "Milestone ULID or null" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["aggregate_id", "title"]
+    },
+    "TaskUpdated": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "TaskAssigned": {
+      "type": "object",
+      "properties": {
+        "assignee_id": { "type": "string", "description": "User ULID" }
+      },
+      "required": ["assignee_id"]
+    },
+    "TaskCompleted": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  }
+}

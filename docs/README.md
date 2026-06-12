@@ -55,7 +55,7 @@
 - [Membership](modules/membership.md) — управление участниками, заявки, статусы
 - [Billing](modules/billing.md) — платежи, подписки, сплит
 - [Bookings](modules/bookings.md) — бронирование комнат и пространств
-- [Tasks](modules/tasks.md) — дежурства, обязанности, напоминания
+- [Tasks & Projects](modules/tasks.md) — задачи, проекты, milestones, дежурства
 - [Treasury](modules/treasury.md) — казна, бюджеты, прозрачность
 - [Content](modules/content.md) — афиша, объявления, обсуждения
 - [Proposals](modules/proposals.md) — голосования, предложения
