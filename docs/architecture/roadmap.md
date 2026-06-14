@@ -6,13 +6,11 @@
 
 ## Phase 0 — Foundation
 
-| Что | Зависимости |
+| Что | Статус |
 |---|---|
-| Core Engine (API, Auth, RBAC) | — |
-| Event Store (PostgreSQL) | Core Engine |
-| Event Bus (NATS / RabbitMQ) | Core Engine |
-| Module Registry | Core Engine |
-| Монорепозиторий + CI/CD | — |
+| Core Engine (API, Auth, Event Store) | ✅ Реализовано |
+| Event Bus (pg_notify) | ✅ Реализовано |
+| Монорепозиторий + CI/CD | ✅ Реализовано |
 
 **Готовность:** можно запустить пустой инстанс с пресетом.
 
@@ -20,54 +18,58 @@
 
 ## Phase 1 — Core Modules
 
-| Модуль | События | Связи |
-|---|---|---|
-| **Membership** | регистрация, роли, заявки | — |
-| **Tasks** | CRUD, assign, complete, проекции | Reputation |
-| **Proposals** | создание, голосование, закрытие | — |
-| **Reputation** | баллы за Task, откат за ошибки | Tasks |
-| **Platform-сообщество** | CoGuild-пресет + Projects | всё выше |
+| Модуль | Статус |
+|---|---|
+| **Auth** (регистрация, JWT, боты, сессии) | ✅ Реализовано (Session entity, deterministic IDs, profile) |
+| **Community** (создание, CRUD) | ✅ Реализовано (auto-join creator) |
+| **Membership** (join, approve, leave) | ✅ Реализовано (deterministic member_id) |
+| **Tasks & Projects** | ✅ Реализовано (community-scoped, is_default, project_id required) |
+| **Requests** | ✅ Реализовано (7 событий, 9 mutation, community-scoped) |
+| **Entity Store + Modifier Pattern** | ✅ Реализовано (entities table, ModifierBase, CommandProcessor) |
+| **Frontend UI Kit** | ✅ Реализовано (AppButton, AppInput, AppCard, AppModal, FormField) |
+| **Proposals** | ❌ Не реализовано |
+| **Reputation** | ❌ Не реализовано |
 
-**Готовность:** можно завести сообщество, создавать задачи, голосовать. Agent ещё не подключён.
+**Готовность:** можно завести сообщество, управлять участниками, создавать задачи и проекты, отправлять запросы. Все GraphQL резолверы читают из EntityStore, пишут через CommandProcessor.
 
 ---
 
 ## Phase 2 — Agent MVP ★
 
-| Компонент | Описание |
+| Компонент | Статус |
 |---|---|
-| **Requests** | форма/бот → сырой запрос |
-| **Thin Coordinator** | event listener → HTTP-запросы к opencode serve |
-| **Community MCP Server** | remote MCP: данные и действия сообщества |
-| **Opencode serve** | headless сервер с agents + skills |
-| **Agent: `@classifier`** | Pipeline 1: Request → Task (classify, dedup, enrich) |
-| **Agent: `@task-executor`** | Pipeline 2: анализ кода, PR через opencode |
-| **Agent: `@self-healer`** | Pipeline 3: метрики → Task |
-| **Skills** | `classify-request`, `analyze-code`, `self-heal` — SKILL.md |
+| **Requests** | ✅ Реализовано |
+| **Thin Coordinator** | ✅ Реализовано (pg_notify → opencode serve) |
+| **Community MCP Server** | ✅ Реализовано (10 tools, JSON-RPC + SSE) |
+| **Opencode serve** | ✅ Настроено (:4096, MCP, agents) |
+| **Agent: `@classifier`** | ✅ Pipeline 1 работает (Request → Task, dedup) |
+| **Seed-боты как User(is_bot)** | 🟡 Заменить хардкод `agent_user_id` на реальных User'ов |
+| **Agent: `@task-executor`** | ❌ Не подключён (ждёт TaskAssigned handler) |
+| **Agent: `@self-healer`** | ❌ Не подключён (ждёт метрик) |
+| **Skills** | 🟡 Частично (classifier.txt есть, остальные — нет) |
 
-**Готовность:** Agent подключён к сообществу. Видит задачи. Формулирует новые из Request. Выполняет назначенные Task. Создаёт self-healing Task по метрикам.
-
-**Что не нужно писать:** Coordinator — только коннектор (~100 строк). LLM-вызовы, контекст, MCP — всё в opencode serve.
+**Готовность:** Request → Task pipeline работает end-to-end. Остальные пайплайны — в следующей итерации Phase 2.
 
 ---
 
-## Phase 3+ (опционально)
+## Phase 3 — Bots & Management
+
+| Что | Описание |
+|---|---|
+| **Seed-боты как User(is_bot)** | Заменить `agent_user_id` хардкод на User с `is_bot=true`, seed при старте Coordinator |
+| **Панель управления ботами** | UI `/community/:id/bots`: создать, настроить, отключить бота |
+| **Custom-боты** | Пользовательские AI-боты: свой prompt, модель, API-ключи per community |
+| **RBAC роли** | admin / moderator / member / bot — на уровне Member |
+| **Настройка Agent в сообществе** | Выбор ботов, их промптов и моделей через UI |
+
+---
+
+## Phase 4+ (опционально)
 
 | Что | Когда |
 |---|---|
-| Frontend (Landing SPA + Platform UI) | После Phase 2 |
-| Боты (Telegram, MAX) | После Phase 2 |
-| Auto-approve правил | После Phase 2 |
-| Cross-preset расширение | После Phase 2 |
-| Эволюция пресетов | После Phase 2 |
-
----
-
-## Решения до старта
-
-| Решение | Варианты |
-|---|---|
-| Язык бэкенда | Go / TypeScript (NestJS) / Rust |
-| Event Bus | NATS / RabbitMQ |
-| LLM для Agent'ов | Определяется в `opencode.jsonc` (OpenAI, Claude, local — любой) |
-| Community MCP | Python / Go / TypeScript |
+| Внешние боты (Telegram, MAX, Discord) | После Phase 3 |
+| Frontend (Landing SPA + Platform UI) | После Phase 3 |
+| Auto-approve правил | После Phase 3 |
+| Cross-preset расширение | После Phase 3 |
+| Эволюция пресетов | После Phase 3 |
