@@ -9,7 +9,7 @@ App.vue (switch по route.meta.layout)
     ├── Sidebar        # левая панель
     │   ├── User       # email, logout, My Communities
     │   └── Community  # только когда communityId в URL
-    │                  #   Home, Tasks & Projects
+    │                  #   Home, Workspaces
     └── <router-view>  # контент страницы справа
 ```
 
@@ -26,7 +26,7 @@ App.vue (switch по route.meta.layout)
 │  ▓ COMMUNITY         │  ← только когда communityId в URL
 │  Название            │
 │  ── Home             │
-│  ── Tasks & Projects │
+│  ── Workspaces       │
 └──────────────────────┘
 ```
 
@@ -39,8 +39,10 @@ App.vue (switch по route.meta.layout)
 | `/` | → redirect `/communities` | — | — |
 | `/communities` | `CommunitiesList.vue` | Auth | Нет |
 | `/community/:communityId` | `CommunityHome.vue` | Auth | Да |
-| `/community/:communityId/projects` | `ProjectsView.vue` | Auth | Да |
-| `/community/:communityId/projects/:projectId` | `ProjectDetail.vue` | Auth | Да |
+| `/community/:communityId/workspaces` | `WorkspacesList.vue` | Auth | Да |
+| `/community/:communityId/workspaces/:workspaceId` | `WorkspaceDetail.vue` | Auth | Да |
+| `/community/:communityId/issues/:issueId` | `IssueDetail.vue` | Auth | Да |
+| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Auth | Да |
 
 
 ## План развития
@@ -56,7 +58,7 @@ AppLayout
     └── <router-view />    # контент страницы
         └── CommunityLayout   # внутри сообщества
             ├── CommunityHeader  # название, описание, actions
-            ├── CommunityTabs    # Tasks / Projects / Agent / Members
+            ├── CommunityTabs    # Workspaces / Issues / Boards / Members
             └── <router-view />  # контент таба
 ```
 

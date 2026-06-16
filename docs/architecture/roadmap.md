@@ -23,7 +23,7 @@
 | **Auth** (регистрация, JWT, боты, сессии) | ✅ Реализовано (Session entity, deterministic IDs, profile) |
 | **Community** (создание, CRUD) | ✅ Реализовано (auto-join creator) |
 | **Membership** (join, approve, leave) | ✅ Реализовано (deterministic member_id) |
-| **Tasks & Projects** | ✅ Реализовано (community-scoped, is_default, project_id required) |
+| **Issues & Workspaces** (воркспейсы, задачи, доски, milestones, комментарии) | ✅ Реализовано (event-sourced, subscription-runner для системных комментариев) |
 | **Requests** | ✅ Реализовано (7 событий, 9 mutation, community-scoped) |
 | **Entity Store + Modifier Pattern** | ✅ Реализовано (entities table, ModifierBase, CommandProcessor) |
 | **Frontend UI Kit** | ✅ Реализовано (AppButton, AppInput, AppCard, AppModal, FormField) |
@@ -42,13 +42,13 @@
 | **Thin Coordinator** | ✅ Реализовано (pg_notify → opencode serve) |
 | **Community MCP Server** | ✅ Реализовано (10 tools, JSON-RPC + SSE) |
 | **Opencode serve** | ✅ Настроено (:4096, MCP, agents) |
-| **Agent: `@classifier`** | ✅ Pipeline 1 работает (Request → Task, dedup) |
+| **Agent: `@classifier`** | ✅ Pipeline 1 работает (Request → Issue, dedup) |
 | **Seed-боты как User(is_bot)** | 🟡 Заменить хардкод `agent_user_id` на реальных User'ов |
 | **Agent: `@task-executor`** | ❌ Не подключён (ждёт TaskAssigned handler) |
 | **Agent: `@self-healer`** | ❌ Не подключён (ждёт метрик) |
 | **Skills** | 🟡 Частично (classifier.txt есть, остальные — нет) |
 
-**Готовность:** Request → Task pipeline работает end-to-end. Остальные пайплайны — в следующей итерации Phase 2.
+**Готовность:** Request → Issue pipeline работает end-to-end. Остальные пайплайны — в следующей итерации Phase 2.
 
 ---
 

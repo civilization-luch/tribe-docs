@@ -21,7 +21,7 @@ end
         M1["Membership"]
         M2["Billing"]
         M3["Bookings"]
-        M4["Tasks"]
+        M4["Issues"]
         M5["Treasury"]
         M6["Content"]
         M7["Proposals"]
@@ -32,7 +32,6 @@ end
         M12["Revenue"]
         M13["Registry"]
         M14["Schedule"]
-        M15["Projects"]
     end
 
     subgraph Region["Multi-Region Layer"]
@@ -72,7 +71,6 @@ end
     MR --> M12
     MR --> M13
     MR --> M14
-    MR --> M15
 
     M2 --> RKZ
     M2 --> RVN
@@ -98,12 +96,12 @@ end
 
 | Пресет | Модули |
 |---|---|
-| **CoLive** | Membership, Billing, Bookings, Tasks, Treasury, Content, Proposals, Reputation, Documents |
+| **CoLive** | Membership, Billing, Bookings, Issues, Treasury, Content, Proposals, Reputation, Documents |
 | **CoSpace** | Membership, Schedule, Bookings, Billing, Content, Proposals, Reputation, Documents |
-| **CoSettle** | Membership, Registry, Treasury, Proposals, Tasks, Content, Documents |
-| **CoGuild** | Membership, LMS, Tasks, Billing, Content, Proposals, Reputation, Documents |
+| **CoSettle** | Membership, Registry, Treasury, Proposals, Issues, Content, Documents |
+| **CoGuild** | Membership, LMS, Issues, Billing, Content, Proposals, Reputation, Documents |
 | **CoOper** | Membership, Registry, Billing, Treasury, Proposals, Content, Marketplace |
-| **Synergy** | Membership, Treasury, Billing, Marketplace, Documents, Proposals, Tasks, Reputation, Revenue |
+| **Synergy** | Membership, Treasury, Billing, Marketplace, Documents, Proposals, Issues, Reputation, Revenue |
 
 ### 1. Platform Core
 
@@ -113,7 +111,7 @@ end
 
 ### 2. Module Layer
 
-Каждый модуль — независимый блок с API, хранилищем и настройками. Модули не зависят друг от друга, но могут обмениваться событиями. Большинство модулей общие для всех пресетов. **Projects** — опциональный Premium-модуль для группировки комплексных задач (см. [projects.md](../modules/projects.md)).
+Каждый модуль — независимый блок с API, хранилищем и настройками. Модули не зависят друг от друга, но могут обмениваться событиями. Большинство модулей общие для всех пресетов. **Issues & Workspaces** — единый модуль для задач, воркспейсов, досок и комментариев (см. [issues.md](../modules/issues.md)).
 
 ### 3. Multi-Region Layer
 
@@ -125,7 +123,7 @@ PostgreSQL, S3-совместимое хранилище, очередь соо�
 
 ### 5. Platform Ecosystem (новое)
 
-Система поверх ядра: сбор запросов от пользователей, Agent-фильтрация, Platform-сообщество для управления разработкой, боты и мониторинг. Комплексные фичи группируются через модуль **Projects** (см. [projects.md](../modules/projects.md)). Подробно — в [platform-ecosystem.md](platform-ecosystem.md).
+Система поверх ядра: сбор запросов от пользователей, Agent-фильтрация, Platform-сообщество для управления разработкой, боты и мониторинг. Комплексные фичи группируются через модуль **Issues & Workspaces** (см. [issues.md](../modules/issues.md)). Подробно — в [platform-ecosystem.md](platform-ecosystem.md).
 
 ## Roadmap
 

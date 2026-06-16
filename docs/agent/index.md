@@ -33,7 +33,7 @@ Opencode serve — headless HTTP-сервер. Всю работу делает 
 
 | Пайплайн | Agent | Skill |
 |---|---|---|
-| **Pipeline 1: Request → Task** | `@classifier` | `classify-request` |
+| **Pipeline 1: Request → Issue** | `@classifier` | `classify-request` |
 | **Pipeline 2: Task Executor** | `@task-executor` | `analyze-code` |
 | **Pipeline 3: Self-healing** | `@self-healer` | `self-heal` |
 
@@ -64,18 +64,18 @@ Opencode.jsonc конфигурация Community MCP:
   },
   "agent": {
     "classifier": {
-      "description": "Классифицирует Request, ищет дубликаты, создаёт Task",
+      "description": "Классифицирует Request, ищет дубликаты, создаёт Issue",
       "mode": "subagent",
       "temperature": 0.1,
       "prompt": "{file:./prompts/classifier.txt}"
     },
     "task-executor": {
-      "description": "Анализирует код, генерирует PR по Task",
+      "description": "Анализирует код, генерирует PR по Issue",
       "mode": "subagent",
       "prompt": "{file:./prompts/task-executor.txt}"
     },
     "self-healer": {
-      "description": "Анализирует метрики и создаёт Task при аномалиях",
+      "description": "Анализирует метрики и создаёт Issue при аномалиях",
       "mode": "subagent",
       "temperature": 0.2,
       "prompt": "{file:./prompts/self-healer.txt}"
@@ -114,14 +114,14 @@ description: Классифицирует сырые запросы: баг / ф
 - Если предложение новой возможности → feature
 - Если вопрос по использованию → question
 - Иначе → idea
-После классификации ищи дубликаты через community MCP `search_tasks`.
+После классификации ищи дубликаты через community MCP `search_issues`.
 ```
 
 `.opencode/skills/self-heal/SKILL.md`:
 ```markdown
 ---
 name: self-heal
-description: Анализирует метрики сообщества и создаёт Task при аномалиях
+description: Анализирует метрики сообщества и создаёт Issue при аномалиях
 ---
 Правила:
 - 0 сделок за 24ч → create_task("Проверить модуль продаж")
@@ -132,3 +132,4 @@ description: Анализирует метрики сообщества и со�
 ## Документы
 
 - [Community MCP](community-mcp.md) — MCP-сервер для доступа к сообществу
+- [Bot-участники (AI)](bots.md) — AI-боты как User'ы сообществ

@@ -46,9 +46,10 @@ Community MCP Server авторизуется как **bot-участник** с
 | Resource | Описание |
 |---|---|
 | `community://info` | Информация о сообществе (название, пресет, участники) |
-| `community://tasks/{id}` | Детали задачи (описание, статус, assignee, комментарии) |
-| `community://tasks?status=open&assignee=@agent` | Поиск задач по фильтру |
-| `community://projects/{id}` | Детали проекта и milestones |
+| `community://issues/{id}` | Детали issue (описание, статус, assignee, комментарии) |
+| `community://issues?workspace=...&status=open&assignee=@agent` | Поиск issues по фильтру |
+| `community://workspaces/{id}` | Детали workspace и milestones |
+| `community://boards/{id}` | Канбан-доска с items |
 | `community://proposals/{id}` | Голосование, статус, результаты |
 | `community://metrics` | Бизнес-метрики сообщества |
 | `community://member/{id}/reputation` | Репутация участника |
@@ -57,12 +58,13 @@ Community MCP Server авторизуется как **bot-участник** с
 
 | Tool | Параметры | Описание |
 |---|---|---|
-| `create_task` | `title`, `description`, `assignee?`, `priority?`, `tags?` | Создать задачу |
-| `update_task` | `task_id`, `status`, `comment?` | Обновить статус задачи, добавить комментарий |
-| `search_tasks` | `query`, `status?`, `assignee?`, `limit?` | Полнотекстовый поиск задач |
-| `get_task` | `task_id` | Получить детали задачи |
-| `link_task_to_project` | `task_id`, `project_id` | Привязать задачу к проекту |
-| `get_project` | `project_id` | Получить проект с milestones |
+| `create_issue` | `title`, `description`, `workspace_id`, `assignee?`, `priority?`, `labels?` | Создать issue |
+| `update_issue` | `issue_id`, `status?`, `comment?` | Обновить issue (статус, добавить комментарий) |
+| `search_issues` | `query`, `status?`, `assignee?`, `limit?` | Полнотекстовый поиск issues |
+| `get_issue` | `issue_id` | Получить детали issue |
+| `get_workspace` | `workspace_id` | Получить workspace с milestones |
+| `add_comment` | `issue_id`, `body` | Добавить комментарий к issue |
+| `get_board` | `board_id` | Получить канбан-доску с items |
 | `get_member_reputation` | `member_id` | Репутация участника |
 | `notify` | `channel`, `message` | Отправить уведомление (Telegram, чат сообщества) |
 
@@ -72,17 +74,18 @@ Community MCP Server авторизуется как **bot-участник** с
 
 ```
 Используй инструменты community MCP:
-- search_tasks — найти похожие задачи
-- get_task — прочитать детали задачи
-- create_task — создать новую задачу
-- update_task — обновить статус
+- search_issues — найти похожие issues
+- get_issue — прочитать детали issue
+- create_issue — создать новую issue
+- update_issue — обновить статус
+- add_comment — добавить комментарий
 ```
 
 Opencode сам решает, когда вызывать MCP-инструменты. Никакой дополнительной обвязки не нужно.
 
 ## Примеры вызовов из Thin Coordinator
 
-### Pipeline 1: Request → Task
+### Pipeline 1: Request → Issue
 
 ```python
 requests.post(f"{OPENCODE_URL}/session/{session_id}/message", json={
@@ -93,23 +96,23 @@ requests.post(f"{OPENCODE_URL}/session/{session_id}/message", json={
 ```
 
 Agent `@classifier` через community MCP:
-1. `search_tasks` — ищет дубликаты
-2. `create_task` — создаёт Task, если дубликатов нет
+1. `search_issues` — ищет дубликаты
+2. `create_issue` — создаёт Issue, если дубликатов нет
 
-### Pipeline 2: Task Executor
+### Pipeline 2: Issue Executor
 
 ```python
 requests.post(f"{OPENCODE_URL}/session/{session_id}/message", json={
-    "parts": [{"type": "text", "text": f"Выполни задачу {task_id}"}],
+    "parts": [{"type": "text", "text": f"Выполни issue {issue_id}"}],
     "agent": "task-executor",
 })
 ```
 
 Agent `@task-executor`:
-1. `get_task` — читает описание и контекст
+1. `get_issue` — читает описание и контекст
 2. Анализирует codebase
 3. Создаёт PR
-4. `update_task(status=review)` — обновляет статус
+4. `update_issue(status=review)` — обновляет статус
 
 ## Реализация
 
@@ -122,8 +125,8 @@ Community MCP Server — тонкий слой (~200-300 строк), котор
 ```mermaid
 sequenceDiagram
     OpencodeServe->>CommunityMCP: list_tools
-    CommunityMCP-->>OpencodeServe: [get_task, search_tasks, create_task, ...]
-    OpencodeServe->>CommunityMCP: get_task("task-123")
+    CommunityMCP-->>OpencodeServe: [get_issue, search_issues, create_issue, ...]
+    OpencodeServe->>CommunityMCP: get_issue("issue-123")
     CommunityMCP->>TribeAPI: GraphQL query
     TribeAPI-->>CommunityMCP: task data
     CommunityMCP-->>OpencodeServe: MCP response

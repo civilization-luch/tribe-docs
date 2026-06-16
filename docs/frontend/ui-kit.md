@@ -44,7 +44,7 @@ src/
 └── widgets/
     ├── CommunityCard.vue
     ├── MemberRow.vue
-    ├── TaskCard.vue
+    ├── IssueCard.vue
     ├── VoteProgress.vue
     └── AgentChat.vue
 ```
@@ -56,7 +56,7 @@ src/
 └── features/
     ├── auth/         # LoginForm.vue, RegisterForm.vue
     ├── community/    # CreateCommunityForm.vue, JoinButton.vue
-    ├── tasks/        # CreateTaskForm.vue, TaskAssigneeSelect.vue
+    ├── issues/       # CreateIssueForm.vue, IssueAssigneeSelect.vue
     └── agent/        # AgentMessageInput.vue, AgentMessageBubble.vue
 ```
 
@@ -80,7 +80,7 @@ src/
 src/
 ├── app/          # инициализация, роутер, store
 ├── shared/       # UI-примитивы, утилиты, API-клиент
-├── entities/     # бизнес-сущности (Community, Member, Task, Proposal)
+├── entities/     # бизнес-сущности (Community, Member, Issue, Workspace, Board)
 ├── features/     # действия пользователя
 ├── widgets/      # композитные блоки
 └── pages/        # страницы

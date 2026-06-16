@@ -15,17 +15,17 @@
 
 | Пресет | Community модули | Premium модули |
 |---|---|---|
-| **CoLive** | Membership, Tasks, Content, Proposals, Reputation, Documents | Billing, Bookings, Treasury |
+| **CoLive** | Membership, Issues, Content, Proposals, Reputation, Documents | Billing, Bookings, Treasury |
 | **CoSpace** | Membership, Schedule, Content, Proposals, Reputation, Documents | Bookings, Billing |
-| **CoSettle** | Membership, Proposals, Tasks, Content, Documents | Registry, Treasury |
-| **CoGuild** | Membership, Tasks, Content, Proposals, Reputation, Documents | LMS, Billing |
+| **CoSettle** | Membership, Proposals, Issues, Content, Documents | Registry, Treasury |
+| **CoGuild** | Membership, Issues, Content, Proposals, Reputation, Documents | LMS, Billing |
 | **CoOper** | Membership, Proposals, Content | Registry, Billing, Treasury, Marketplace |
 
 ## Лицензирование модулей
 
 | Уровень | Модули | Репозиторий |
 |---|---|---|
-| **Community** (OSS) | Membership, Tasks, Content, Proposals, Reputation, Documents, Schedule | `github.com/tribe/core` (public) |
+| **Community** (OSS) | Membership, Issues, Content, Proposals, Reputation, Documents, Schedule | `github.com/tribe/core` (public) |
 | **Premium** | Billing, Bookings, Treasury, LMS, Marketplace, Revenue, Registry | `github.com/tribe/premium` (private) |
 
 На старте — монорепозиторий (`tribe/`), после обкатки — разделение на core + premium.
@@ -55,7 +55,7 @@
 - [Membership](modules/membership.md) — управление участниками, заявки, статусы
 - [Billing](modules/billing.md) — платежи, подписки, сплит
 - [Bookings](modules/bookings.md) — бронирование комнат и пространств
-- [Tasks & Projects](modules/tasks.md) — задачи, проекты, milestones, дежурства
+- [Issues & Workspaces](modules/issues.md) — задачи, воркспейсы, milestones, доски, комментарии
 - [Treasury](modules/treasury.md) — казна, бюджеты, прозрачность
 - [Content](modules/content.md) — афиша, объявления, обсуждения
 - [Proposals](modules/proposals.md) — голосования, предложения

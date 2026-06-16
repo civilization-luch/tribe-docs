@@ -7,9 +7,11 @@
 | `/login` | `Login.vue` | Нет | Форма email + password → `login` mutation → JWT в localStorage |
 | `/register` | `Register.vue` | Нет | Форма email + password + name → `register` mutation |
 | `/communities` | `CommunitiesList.vue` | Да | Список community, create, join |
-| `/community/:communityId` | `CommunityHome.vue` | Да | Детальная страница сообщества (members, projects) |
-| `/community/:communityId/projects` | `ProjectsView.vue` | Да | Список проектов, create |
-| `/community/:communityId/projects/:projectId` | `ProjectDetail.vue` | Да | Проект + задачи (create, assign, complete) |
+| `/community/:communityId` | `CommunityHome.vue` | Да | Детальная страница сообщества (members, workspaces, boards) |
+| `/community/:communityId/workspaces` | `WorkspacesList.vue` | Да | Список workspaces, create |
+| `/community/:communityId/workspaces/:workspaceId` | `WorkspaceDetail.vue` | Да | Workspace + issues (create, assign, status change) |
+| `/community/:communityId/issues/:issueId` | `IssueDetail.vue` | Да | Детали issue + комментарии |
+| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Да | Канбан-доска с колонками |
 
 ## Guards
 

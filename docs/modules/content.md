@@ -43,5 +43,5 @@
 ## Связи
 
 - С [Bookings](bookings.md) — бронь пространства под ивент
-- С [Tasks](tasks.md) — задачи по организации
+- С [Issues](issues.md) — задачи по организации
 - С [Treasury](treasury.md) — бюджет мероприятия

@@ -11,7 +11,7 @@
 | Auth | `UserRegistered`, `UserProfileUpdated` |
 | Membership | `MemberJoined`, `MemberApproved`, `MemberLeft` |
 | Community | `CommunityCreated`, `CommunityUpdated` |
-| Tasks | `TaskCreated`, `TaskAssigned`, `TaskCompleted`, `ProjectCreated` |
+| Issues | `IssueCreated`, `IssueAssigned`, `IssueStatusChanged`, `WorkspaceCreated` |
 | Requests | `RequestCreated`, `RequestAccepted`, `RequestConverted` |
 
 ### Схема

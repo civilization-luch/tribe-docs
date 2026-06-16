@@ -58,6 +58,6 @@
 
 ## Связи
 
-- С [Tasks](tasks.md) — бонусы за задачи
+- С [Issues](issues.md) — бонусы за задачи
 - С [Proposals](proposals.md) — вес голоса
 - С [Billing](billing.md) — бонусы за оплаты
