@@ -23,14 +23,30 @@
 | **Auth** (регистрация, JWT, боты, сессии) | ✅ Реализовано (Session entity, deterministic IDs, profile) |
 | **Community** (создание, CRUD) | ✅ Реализовано (auto-join creator) |
 | **Membership** (join, approve, leave) | ✅ Реализовано (deterministic member_id) |
-| **Issues & Workspaces** (воркспейсы, задачи, доски, milestones, комментарии) | ✅ Реализовано (event-sourced, subscription-runner для системных комментариев) |
-| **Requests** | ✅ Реализовано (7 событий, 9 mutation, community-scoped) |
+| **Issues & Workspaces** (воркспейсы, задачи, доски, milestones, комментарии) | ✅ Реализовано (event-sourced, subscription-runner для системных комментариев, duplicate auto-close) |
+| **Comments** | ✅ Реализовано (пользовательские + системные через SubscriptionRunner) |
+| **Board View (Kanban)** | ✅ Реализовано (BoardView.vue, колонки, фильтры, кнопки смены статуса) |
+| **Dark theme** | ✅ Реализовано (data-theme="dark", localStorage, FOUC-prevention) |
+| **RBAC (Permission Registry)** | ✅ Реализовано (shared/permissions.py, require_permission, 18 permissions) |
+| **E2E tests (Playwright)** | ✅ Реализовано (tribe_e2e DB, smoke test, CI workflow) |
 | **Entity Store + Modifier Pattern** | ✅ Реализовано (entities table, ModifierBase, CommandProcessor) |
 | **Frontend UI Kit** | ✅ Реализовано (AppButton, AppInput, AppCard, AppModal, FormField) |
+| **Feedback → Issue** | ✅ Реализовано (FeedbackButton создаёт Issue, lazy Feedback workspace) |
 | **Proposals** | ❌ Не реализовано |
 | **Reputation** | ❌ Не реализовано |
 
-**Готовность:** можно завести сообщество, управлять участниками, создавать задачи и проекты, отправлять запросы. Все GraphQL резолверы читают из EntityStore, пишут через CommandProcessor.
+**Готовность:** можно завести сообщество, управлять участниками, создавать воркспейсы и задачи, комментировать, отслеживать канбан-доски. Все GraphQL резолверы читают из EntityStore, пишут через CommandProcessor.
+
+---
+
+## Phase 1.5 — Planned Enhancements
+
+| Что | Статус | Подход |
+|---|---|---|
+| **Notifications** | ❌ Запланировано | Event Subscription → Notification entity → pull по клику на 🔔 (см. [notifications.md](../modules/notifications.md)) |
+| **Кастомные роли сообщества** | ❌ Запланировано | Community.custom_roles JSONB, PERMISSIONS на роль, UI для owner/admin |
+| **Community MCP Server** | ❌ Запланировано | HTTP :3001, MCP-инструменты (get_issue, create_issue, search_issues, add_comment), bot-token auth |
+| **Issue detail: mention, markdown** | ❌ Запланировано | Рендеринг markdown в комментариях и описании, @username mentions |
 
 ---
 
@@ -38,17 +54,15 @@
 
 | Компонент | Статус |
 |---|---|
-| **Requests** | ✅ Реализовано |
-| **Thin Coordinator** | ✅ Реализовано (pg_notify → opencode serve) |
-| **Community MCP Server** | ✅ Реализовано (10 tools, JSON-RPC + SSE) |
-| **Opencode serve** | ✅ Настроено (:4096, MCP, agents) |
-| **Agent: `@classifier`** | ✅ Pipeline 1 работает (Request → Issue, dedup) |
+| **Thin Coordinator** | 🟡 Частично (pg_notify → opencode serve) |
+| **Community MCP Server** | ❌ Запланировано (MCP-инструменты: get_issue, search_issues, create_issue, add_comment) |
+| **Agent: `@classifier`** | 🟡 Частично (Request → Issue pipeline) |
 | **Seed-боты как User(is_bot)** | 🟡 Заменить хардкод `agent_user_id` на реальных User'ов |
-| **Agent: `@task-executor`** | ❌ Не подключён (ждёт TaskAssigned handler) |
+| **Agent: `@task-executor`** | ❌ Не подключён (ждёт IssueAssigned handler) |
 | **Agent: `@self-healer`** | ❌ Не подключён (ждёт метрик) |
 | **Skills** | 🟡 Частично (classifier.txt есть, остальные — нет) |
 
-**Готовность:** Request → Issue pipeline работает end-to-end. Остальные пайплайны — в следующей итерации Phase 2.
+**Готовность:** Issue pipeline работает end-to-end. Остальные пайплайны — в следующей итерации Phase 2.
 
 ---
 
@@ -59,7 +73,7 @@
 | **Seed-боты как User(is_bot)** | Заменить `agent_user_id` хардкод на User с `is_bot=true`, seed при старте Coordinator |
 | **Панель управления ботами** | UI `/community/:id/bots`: создать, настроить, отключить бота |
 | **Custom-боты** | Пользовательские AI-боты: свой prompt, модель, API-ключи per community |
-| **RBAC роли** | admin / moderator / member / bot — на уровне Member |
+| **RBAC роли** | ✅ Реализовано (permissions.py, require_permission, 18 permissions; кастомные роли — запланировано) |
 | **Настройка Agent в сообществе** | Выбор ботов, их промптов и моделей через UI |
 
 ---

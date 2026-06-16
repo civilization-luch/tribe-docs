@@ -142,3 +142,4 @@
 - С [Reputation](reputation.md) — бонусы за выполнение задач
 - С [Content](content.md) — объявления о задачах
 - С [Membership](membership.md) — проверка членства при назначении
+- С [Notifications](notifications.md) — уведомления о назначениях, комментариях, смене статуса (запланировано)
