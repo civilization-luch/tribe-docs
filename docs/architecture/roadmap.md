@@ -45,7 +45,7 @@
 |---|---|---|
 | **Notifications** | ❌ Запланировано | Event Subscription → Notification entity → pull по клику на 🔔 (см. [notifications.md](../modules/notifications.md)) |
 | **Кастомные роли сообщества** | ❌ Запланировано | Community.custom_roles JSONB, PERMISSIONS на роль, UI для owner/admin |
-| **Community MCP Server** | ❌ Запланировано | HTTP :3001, MCP-инструменты (get_issue, create_issue, search_issues, add_comment), bot-token auth |
+| **Community MCP Server** | ✅ Реализовано | HTTP :3001, 11 MCP-инструментов (create_issue, update_issue, search_issues, get_issue, get_workspace, add_comment, get_board, get_member_reputation, notify, convert_request, reject_request), bot-token auth |
 | **Issue detail: mention, markdown** | ❌ Запланировано | Рендеринг markdown в комментариях и описании, @username mentions |
 
 ---
@@ -55,7 +55,7 @@
 | Компонент | Статус |
 |---|---|
 | **Thin Coordinator** | 🟡 Частично (pg_notify → opencode serve) |
-| **Community MCP Server** | ❌ Запланировано (MCP-инструменты: get_issue, search_issues, create_issue, add_comment) |
+| **Community MCP Server** | ✅ Реализовано (см. Phase 1.5) |
 | **Agent: `@classifier`** | 🟡 Частично (Request → Issue pipeline) |
 | **Seed-боты как User(is_bot)** | 🟡 Заменить хардкод `agent_user_id` на реальных User'ов |
 | **Agent: `@task-executor`** | ❌ Не подключён (ждёт IssueAssigned handler) |

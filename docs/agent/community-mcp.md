@@ -22,7 +22,7 @@ Community MCP Server подключается как **remote MCP** в `opencode
       "type": "remote",
       "url": "http://localhost:3001/mcp",
       "headers": {
-        "Authorization": "Bearer {env:COMMUNITY_BOT_TOKEN}"
+        "Authorization": "Bearer {env:TRIBE_BOT_TOKEN}"
       },
       "enabled": true
     }
