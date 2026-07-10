@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tribe.partnr.icu/schemas/module.json",
+  "title": "Module Definition",
+  "description": "Metadata for a Tribe platform module",
+  "type": "object",
+  "required": ["id", "name", "icon", "scope", "category", "modifiers", "depends_on"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique module identifier (matches modifier id)"
+    },
+    "name": {
+      "type": "object",
+      "description": "Human-readable name (i18n keys: en, ru)",
+      "required": ["en", "ru"],
+      "properties": {
+        "en": { "type": "string" },
+        "ru": { "type": "string" }
+      }
+    },
+    "description": {
+      "type": "object",
+      "description": "Short description (i18n)",
+      "required": ["en", "ru"],
+      "properties": {
+        "en": { "type": "string" },
+        "ru": { "type": "string" }
+      }
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name (e.g. shield, wallet, scale)"
+    },
+    "route": {
+      "type": "string",
+      "description": "Frontend route pattern"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["global", "community", "system"],
+      "description": "global = always available, community = per-community module_ids, system = core platform"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["governance", "economy", "collaboration", "learning", "resources", "system"],
+      "description": "Grouping category for UI"
+    },
+    "modifiers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Modifier IDs that implement this module"
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Module IDs this module requires"
+    },
+    "help_md": {
+      "type": "object",
+      "description": "Markdown help text shown in inline help panel (i18n)",
+      "properties": {
+        "en": { "type": "string" },
+        "ru": { "type": "string" }
+      }
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "type", "default", "label"],
+        "properties": {
+          "key": { "type": "string" },
+          "type": { "type": "string", "enum": ["int", "string", "bool", "float"] },
+          "default": {},
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "label": {
+            "type": "object",
+            "required": ["en", "ru"],
+            "properties": {
+              "en": { "type": "string" },
+              "ru": { "type": "string" }
+            }
+          },
+          "hint": {
+            "type": "object",
+            "properties": {
+              "en": { "type": "string" },
+              "ru": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "handles_entities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Entity types managed by this module"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": {
+            "type": "object",
+            "properties": {
+              "en": { "type": "string" },
+              "ru": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
