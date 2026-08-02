@@ -11,7 +11,7 @@
 | `/community/:communityId/workspaces` | `WorkspacesList.vue` | Да | Список workspaces, create |
 | `/community/:communityId/workspaces/:workspaceId` | `WorkspaceDetail.vue` | Да | Workspace + issues (create, assign, status change) |
 | `/community/:communityId/issues/:issueId` | `IssueDetail.vue` | Да | Детали issue + комментарии |
-| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Да | Канбан-доска с колонками |
+| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Да | Канбан-доска с колонками (DEPRECATED) |
 
 ## Guards
 

@@ -80,7 +80,7 @@ src/
 src/
 ├── app/          # инициализация, роутер, store
 ├── shared/       # UI-примитивы, утилиты, API-клиент
-├── entities/     # бизнес-сущности (Community, Member, Issue, Workspace, Board)
+├── entities/     # бизнес-сущности (Community, Member, Issue, Workspace, Board [DEPRECATED])
 ├── features/     # действия пользователя
 ├── widgets/      # композитные блоки
 └── pages/        # страницы

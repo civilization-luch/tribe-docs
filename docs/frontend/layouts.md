@@ -42,7 +42,7 @@ App.vue (switch по route.meta.layout)
 | `/community/:communityId/workspaces` | `WorkspacesList.vue` | Auth | Да |
 | `/community/:communityId/workspaces/:workspaceId` | `WorkspaceDetail.vue` | Auth | Да |
 | `/community/:communityId/issues/:issueId` | `IssueDetail.vue` | Auth | Да |
-| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Auth | Да |
+| `/community/:communityId/boards/:boardId` | `BoardView.vue` | Auth | Да | (DEPRECATED) |
 
 
 ## План развития

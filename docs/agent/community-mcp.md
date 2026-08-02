@@ -49,7 +49,7 @@ Community MCP Server авторизуется как **bot-участник** с
 | `community://issues/{id}` | Детали issue (описание, статус, assignee, комментарии) |
 | `community://issues?workspace=...&status=open&assignee=@agent` | Поиск issues по фильтру |
 | `community://workspaces/{id}` | Детали workspace и milestones |
-| `community://boards/{id}` | Канбан-доска с items |
+| `community://boards/{id}` | Канбан-доска с items (DEPRECATED) |
 | `community://proposals/{id}` | Голосование, статус, результаты |
 | `community://metrics` | Бизнес-метрики сообщества |
 | `community://member/{id}/reputation` | Репутация участника |
@@ -64,7 +64,7 @@ Community MCP Server авторизуется как **bot-участник** с
 | `get_issue` | `issue_id` | Получить детали issue |
 | `get_workspace` | `workspace_id` | Получить workspace с milestones |
 | `add_comment` | `issue_id`, `body` | Добавить комментарий к issue |
-| `get_board` | `board_id` | Получить канбан-доску с items |
+| `get_board` | `board_id` | Получить канбан-доску с items (DEPRECATED) |
 | `get_member_reputation` | `member_id` | Репутация участника |
 | `notify` | `channel`, `message` | Отправить уведомление (Telegram, чат сообщества) |
 

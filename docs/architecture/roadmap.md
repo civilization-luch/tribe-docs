@@ -25,7 +25,7 @@
 | **Membership** (join, approve, leave) | ✅ Реализовано (deterministic member_id) |
 | **Issues & Workspaces** (воркспейсы, задачи, доски, milestones, комментарии) | ✅ Реализовано (event-sourced, subscription-runner для системных комментариев, duplicate auto-close) |
 | **Comments** | ✅ Реализовано (пользовательские + системные через SubscriptionRunner) |
-| **Board View (Kanban)** | ✅ Реализовано (BoardView.vue, колонки, фильтры, кнопки смены статуса) |
+| **Board View (Kanban)** | ✅ Реализовано (standalone `BoardView.vue` — DEPRECATED; актуальный канбан — board view внутри проекта, колонки из `project.settings.statuses`) |
 | **Dark theme** | ✅ Реализовано (data-theme="dark", localStorage, FOUC-prevention) |
 | **RBAC (Permission Registry)** | ✅ Реализовано (shared/permissions.py, require_permission, 18 permissions) |
 | **E2E tests (Playwright)** | ✅ Реализовано (tribe_e2e DB, smoke test, CI workflow) |
@@ -45,7 +45,7 @@
 |---|---|---|
 | **Notifications** | ❌ Запланировано | Event Subscription → Notification entity → pull по клику на 🔔 (см. [notifications.md](../modules/notifications.md)) |
 | **Кастомные роли сообщества** | ❌ Запланировано | Community.custom_roles JSONB, PERMISSIONS на роль, UI для owner/admin |
-| **Community MCP Server** | ✅ Реализовано | HTTP :3001, 11 MCP-инструментов (create_issue, update_issue, search_issues, get_issue, get_workspace, add_comment, get_board, get_member_reputation, notify, convert_request, reject_request), bot-token auth |
+| **Community MCP Server** | ✅ Реализовано | HTTP :3001, 11 MCP-инструментов (create_issue, update_issue, search_issues, get_issue, get_workspace, add_comment, get_board [DEPRECATED], get_member_reputation, notify, convert_request, reject_request), bot-token auth |
 | **Issue detail: mention, markdown** | ❌ Запланировано | Рендеринг markdown в комментариях и описании, @username mentions |
 | **Workflow (рабочие процессы)** | ❌ Запланировано | Sequence machine, конструктор этапов, продвижение/возврат (см. [workflow.md](../modules/workflow.md)) |
 

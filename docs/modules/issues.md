@@ -64,6 +64,8 @@
 
 ### Board
 
+> DEPRECATED. Отдельная сущность канбан-доски больше не используется: канбан реализуется как board view внутри проекта (`Project.settings.statuses` задают колонки). Сохранена только для переноса данных — см. `scripts/migrate_boards_to_projects.py`.
+
 | Поле | Описание |
 |---|---|
 | `id` | ULID |
@@ -102,8 +104,8 @@
 | `UnlinkIssues` | Убрать связь |
 | `CreateMilestone` | Создать milestone |
 | `ReachMilestone` | Отметить milestone достигнутым |
-| `CreateBoard` | Создать канбан-доску |
-| `UpdateBoard` | Обновить доску |
+| `CreateBoard` | Создать канбан-доску (DEPRECATED) |
+| `UpdateBoard` | Обновить доску (DEPRECATED) |
 | `CreateComment` | Добавить комментарий |
 | `UpdateComment` | Редактировать комментарий |
 
@@ -121,8 +123,8 @@
 | `IssueUnlinked` | Связь убрана |
 | `MilestoneCreated` | Milestone создан |
 | `MilestoneReached` | Milestone достигнут |
-| `BoardCreated` | Доска создана |
-| `BoardUpdated` | Доска обновлена |
+| `BoardCreated` | Доска создана (DEPRECATED) |
+| `BoardUpdated` | Доска обновлена (DEPRECATED) |
 | `CommentCreated` | Комментарий создан |
 | `CommentUpdated` | Комментарий отредактирован |
 
