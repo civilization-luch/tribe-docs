@@ -20,6 +20,19 @@
         "description": { "type": "string" }
       }
     },
+    "ProjectItemIterationChanged": {
+      "type": "object",
+      "description": "Emitted when a project item (linked to an issue) is moved to a different iteration",
+      "properties": {
+        "item_id": { "type": "string", "description": "Project item ULID" },
+        "issue_id": { "type": "string", "description": "Linked issue ULID" },
+        "old_iteration_id": { "type": "string", "description": "Previous iteration id or empty string" },
+        "new_iteration_id": { "type": "string", "description": "New iteration id or empty string" },
+        "recurring": { "type": "boolean", "description": "True when the item is a recurring task" },
+        "recurring_status": { "type": "string", "description": "Status to reset the item to for a new cycle" }
+      },
+      "required": ["item_id", "issue_id", "old_iteration_id", "new_iteration_id", "recurring"]
+    },
     "ProjectArchived": {
       "type": "object",
       "properties": {},
