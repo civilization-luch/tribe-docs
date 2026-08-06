@@ -62,7 +62,7 @@
 - [Proposals](modules/proposals.md) — голосования, предложения
 - [Reputation](modules/reputation.md) — рейтинг, уровни доверия
 - [Documents](modules/documents.md) — договоры, акты, правила
-- [Workflow](modules/workflow.md) — рабочие процессы, пошаговые pipeline
+- [Workflows](modules/workflows.md) — автоматизация работы по событиям, ECA-правила и BPMN-процессы
 
 ### Сервисы (монетизация)
 - [LMS](modules/lms.md) — курсы, обучение, сертификаты

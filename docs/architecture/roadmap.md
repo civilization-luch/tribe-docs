@@ -47,7 +47,7 @@
 | **Кастомные роли сообщества** | ❌ Запланировано | Community.custom_roles JSONB, PERMISSIONS на роль, UI для owner/admin |
 | **Community MCP Server** | ✅ Реализовано | HTTP :3001, 11 MCP-инструментов (create_issue, update_issue, search_issues, get_issue, get_workspace, add_comment, get_board [DEPRECATED], get_member_reputation, notify, convert_request, reject_request), bot-token auth |
 | **Issue detail: mention, markdown** | ❌ Запланировано | Рендеринг markdown в комментариях и описании, @username mentions |
-| **Workflow (рабочие процессы)** | ❌ Запланировано | Sequence machine, конструктор этапов, продвижение/возврат (см. [workflow.md](../modules/workflow.md)) |
+| **Workflow (рабочие процессы)** | 🚧 В работе | ECA-правила реализованы; BPMN-движок (states/gateways/transitions) — в разработке (см. [workflows.md](../modules/workflows.md), [workflows-syntax.md](../modules/workflows-syntax.md)) |
 
 ---
 
