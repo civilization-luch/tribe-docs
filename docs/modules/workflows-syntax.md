@@ -1,6 +1,6 @@
 # Workflow Definition Syntax (BPMN-style)
 
-> Статус: **draft v0.1** — формат уточняется по ходу реализации.
+> Статус: **implemented v0.2** — примитивы `transition.action`, `trigger_by`/`require_role`, `decision`, `wait_for` реализованы и покрыты тестами.
 > Источник контракта для: backend-движка (`src/tribe_engine/workflows/`), frontend-конструктора, авторов определений, автогенерации тестов.
 
 Единый авторский формат описания процессов в стиле BPMN. Модель: `states` (узлы-деятельности и события) + `gateways` (шлюзы) + `transitions` (sequence flows) + `roles` (участники) + `sla_hours` (таймауты).
@@ -96,10 +96,45 @@ ACCEPTED:
 ```yaml
 SECRETARY_REVIEW:
   type: "user_task"
-  assigned_role: "secretary"
+  assigned_role: "admin"
   sla_hours: 24
   on_timeout: "ESCALATED"
 ```
+
+Из `user_task` выходят несколько переходов, размеченных `decision` (approve / reject / rework). Выбор перехода определяется тем, какое `decision` выбрал пользователь в `workflows_complete_user_task`. Дополнительно `trigger_by` ограничивает, кто может выполнить переход (проверяется через `require_role` по роли участника сообщества).
+
+```yaml
+transitions:
+  - name: "approve"
+    from: "SECRETARY_REVIEW"
+    to: "ACCEPTED"
+    trigger_by: "admin"
+    decision: "approve"
+    action: "membership_approve"
+    args:
+      member_id: "${event.aggregate_id}"
+  - name: "reject"
+    from: "SECRETARY_REVIEW"
+    to: "REJECTED"
+    trigger_by: "admin"
+    decision: "reject"
+    action: "membership_remove"
+    args:
+      member_id: "${event.aggregate_id}"
+```
+
+### `wait_for`
+Состояние, которое продолжается **событием** агрегата, а не ручным действием. Задаётся на любом состоянии через `wait_for: "<EventType>"`. Пока событие не пришло, экземпляр находится в статусе `awaiting_user` с `wait_event_type`. Когда событие с нужным типом приходит в Event Store, движок очищает ожидание, выбирает исходящий переход и продолжает.
+
+```yaml
+AWAIT_APPROVAL:
+  type: "intermediate_event"
+  wait_for: "MemberApproved"
+```
+
+Комбинация двух источников прогресса:
+1. **Ручной**: `workflows_complete_user_task` передаёт `decision` (approve/reject/…).
+2. **Событийный**: `wait_for` продвигает экземпляр по факту события другого агрегата.
 
 ### `automated_task`
 Автоматическое действие: вызов modifier action через `CommandProcessor`.
@@ -174,6 +209,7 @@ Sequence flows: из какого состояния, в какое, каким 
 | `from` | string | ✅ | исходное состояние |
 | `to` | string | ✅ | целевой узел (состояние или шлюз) |
 | `trigger_by` | string | нет | роль исполнителя; `"system"` для автопереходов |
+| `decision` | string | нет | какой выбор пользователя активирует этот переход (approve/reject/…) |
 | `when` / `condition` | map | нет | условие выполнения |
 | `action` | string | нет | dispatch-действие на переходе |
 | `args` | map | нет | аргументы action и подстановки |
@@ -251,13 +287,15 @@ if: "payload.status in ['closed', 'done']"
 1. Событие Event Store (catch-all подписка) → поиск определений с `trigger.event_type`.
 2. Фильтр `trigger.filter` → создание `WorkflowInstance` (`WorkflowStarted`).
 3. `advance(instance, event|signal)`:
-   - из текущего состояния собрать допустимые `transition` (по `from`, `trigger_by`, `condition`);
+   - из текущего состояния собрать допустимые `transition` (по `from`, `decision`, `trigger_by`, `condition`);
    - проверить `forbidden_transitions`;
+   - состояние с `wait_for`: ждать событие `wait_for`; при совпадении очистить ожидание и продолжить;
    - `automated_task` → `dispatch()` + валидация контракта выхода;
-   - `user_task` → остановить, ждать `WorkflowUserTaskCompleted` (approve/rework/escalate);
+   - `user_task` → остановить, ждать `workflows_complete_user_task` (approve/rework/escalate по `decision`);
    - `gateway` → выбор/ветвление;
    - `end_event (is_final)` → `WorkflowCompleted`.
 4. SLA: при событии/сигнале пересчитать `sla_hours` (эскалация через `on_timeout`).
+5. `wait_for`: события чужого агрегата прогревят ждущие экземпляры (`_advance_waiting_instances`), независимо от совпадения триггерных правил.
 
 ---
 
@@ -276,4 +314,5 @@ if: "payload.status in ['closed', 'done']"
 
 ## 10. Changelog
 
+- **v0.2 (implemented)** — `transition.action`+`args`, `trigger_by` через `require_role`, routing по `decision` на переходах `user_task`, состояние `wait_for` (событийный прогресс), шаблоны `cooperative_onboarding` и `document_review`.
 - **v0.1 (draft)** — базовая скелет: states/gateways/transitions, переменные, legacy-компактибилити, forbidden transitions.

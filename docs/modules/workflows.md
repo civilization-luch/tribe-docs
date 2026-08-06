@@ -3,7 +3,7 @@
 Модуль автоматизации процессов в сообществе. Два уровня:
 
 1. **ECA Rules** (реализовано) — «когда событие X после условия → действие Y». Агрегат `WorkflowDefinition`, реестр правил, каталог шаблонов.
-2. **BPMN-движок** (план, см. `workflows-syntax.md`) — многошаговые процессы: `states` + `gateways` + `transitions`, `WorkflowInstance`.
+2. **BPMN-движок** (реализовано) — многошаговые процессы: `states` + `gateways` + `transitions`, `WorkflowInstance`. Примитивы: `transition.action`, `trigger_by`/`require_role`, `decision`-routing, `wait_for` (событийный прогресс).
 
 Подробности грамматики процесса — в [workflows-syntax.md](workflows-syntax.md).
 
@@ -45,12 +45,14 @@ class WorkflowDefinition(AggregateRoot):
 
 События: `WorkflowDefinitionCreated/Updated/Toggled/Deleted`.
 
-## Агрегат WorkflowInstance (план)
+## Агрегат WorkflowInstance (реализовано)
 
 `aggregate_type = "workflow_instance"` — запущенный экземпляр процесса:
-`definition_id`, `definition_version`, `context`, `current`, `completed_states[]`, `open_branches[]`, `variables`, `timers[]`, `status`.
+`definition_id`, `definition_version`, `context`, `current`, `completed_states[]`, `open_branches[]`, `variables`, `active_task`, `task_decisions`, `wait_event_type`, `status`.
 
-События: `WorkflowStarted`, `StateEntered`, `StateLeft`, `UserTaskCreated`, `SlaExpired`, `Completed`, `Failed`, `WorkflowUserTaskCompleted`.
+Состояния `status`: `active` / `awaiting_user` / `completed` / `failed`. Прогресс двумя путями: ручной `complete_user_task` (выбор по `decision`) и событийный `wait_for` (продвижение при наступлении события агрегата).
+
+События: `WorkflowStarted`, `StateEntered`, `StateLeft`, `UserTaskCreated`, `TaskDecided`, `WaitForSet`, `WaitForCleared`, `SlaExpired`, `WorkflowCompleted`, `WorkflowFailed`, `WorkflowUserTaskCompleted`.
 
 ## Actions (WorkflowsModifier)
 
@@ -61,9 +63,9 @@ class WorkflowDefinition(AggregateRoot):
 | `workflows_toggle_rule` | вкл/выкл |
 | `workflows_delete_rule` | удалить (soft) |
 | `workflows_activate_template` | активировать шаблон каталога |
-| `workflows_start` *(план)* | создать `WorkflowInstance` по триггеру |
-| `workflows_advance` *(план)* | продвинуть экземпляр по событию/сигналу |
-| `workflows_complete_user_task` *(план)* | approve/rework/escalate пользователем |
+| `workflows_start_instance` | создать `WorkflowInstance` вручную |
+| `workflows_advance_instance` | продвинуть экземпляр по событию/сигналу |
+| `workflows_complete_user_task` | approve/reject/rework — выбор `decision` пользователем |
 | `workflows_signal` *(план)* | внешний сигнал |
 
 ## Каталог шаблонов
@@ -74,11 +76,15 @@ YAML в `src/tribe_engine/workflows/catalog/`. Активация: `workflows_ac
 - `auto_close_issue_on_item_status`
 - `sync_issue_status_to_projects`
 - `recurring_item_on_iteration`
+- `cooperative_onboarding` (user_task + decision + transition.action)
+- `document_review` (user_task + automated_task + decision)
+
+Пример (cooperative_onboarding): `MemberJoined` (status=applicant) → `secret_review` (user_task, роль admin) → approve → `membership_approve` / reject → `membership_remove`.
 
 ## GraphQL
 
-- **Query**: `availableEventTypes`, `availableActions`, `workflowRules`, `workflowRule`, `workflowCatalog`
-- **Mutation**: `createWorkflowRule`, `updateWorkflowRule`, `toggleWorkflowRule`, `deleteWorkflowRule`, `activateWorkflow`
+- **Query**: `availableEventTypes`, `availableActions`, `workflowRules`, `workflowRule`, `workflowCatalog`, `workflowInstancesByContext`
+- **Mutation**: `createWorkflowRule`, `updateWorkflowRule`, `toggleWorkflowRule`, `deleteWorkflowRule`, `activateWorkflow`, `createWorkflowProcess`, `startWorkflowInstance`, `advanceWorkflowInstance`, `completeWorkflowUserTask`
 
 ## Permissions
 
