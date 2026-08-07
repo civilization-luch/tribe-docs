@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_synergy_process" targetNamespace="http://bpmn.io/schema/bpmn" exporter="opencode" exporterVersion="1.0">
+  <bpmn:message id="Msg_request" name="Запрос на поручительство" />
+  <bpmn:message id="Msg_response" name="Согласие / отказ" />
+  <bpmn:message id="Msg_deposit" name="Перевод депозита" />
+  <bpmn:message id="Msg_deposit_ok" name="Депозит принят" />
+  <bpmn:collaboration id="Collaboration_synergy">
+    <bpmn:participant id="Participant_new" name="Новый участник" processRef="Process_new" />
+    <bpmn:participant id="Participant_members" name="Другие участники" processRef="Process_members" />
+    <bpmn:participant id="Participant_platform" name="Платформа (Treasury)" processRef="Process_platform" />
+    <bpmn:messageFlow id="MF_request" sourceRef="Sub_find_guarantors" targetRef="MsgStart_members_request" messageRef="Msg_request" />
+    <bpmn:messageFlow id="MF_agree" name="Согласие" sourceRef="Throw_members_accept" targetRef="Sub_find_guarantors" messageRef="Msg_response" />
+    <bpmn:messageFlow id="MF_decline" name="Отказ" sourceRef="Throw_members_decline" targetRef="Sub_find_guarantors" messageRef="Msg_response" />
+    <bpmn:messageFlow id="MF_deposit_members" name="Перевод депозита" sourceRef="Sub_deposit" targetRef="MsgStart_members_deposit" messageRef="Msg_deposit" />
+    <bpmn:messageFlow id="MF_deposit_ok" name="Депозит принят" sourceRef="Throw_members_deposit_ok" targetRef="Sub_deposit" messageRef="Msg_deposit_ok" />
+    <bpmn:messageFlow id="MF_deposit_platform" name="Перевод депозита" sourceRef="Sub_deposit" targetRef="MsgStart_platform_deposit" messageRef="Msg_deposit" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_new" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_new">
+      <bpmn:outgoing>Flow_new_start_subA</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_new" name="Полноценный участник">
+      <bpmn:incoming>Flow_new_subB_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_new_start_subA" sourceRef="StartEvent_new" targetRef="Sub_find_guarantors" />
+    <bpmn:sequenceFlow id="Flow_new_subA_subB" sourceRef="Sub_find_guarantors" targetRef="Sub_deposit" />
+    <bpmn:sequenceFlow id="Flow_new_subB_end" sourceRef="Sub_deposit" targetRef="EndEvent_new" />
+    <bpmn:subProcess id="Sub_find_guarantors" name="Поиск двух поручителей">
+      <bpmn:incoming>Flow_new_start_subA</bpmn:incoming>
+      <bpmn:outgoing>Flow_new_subA_subB</bpmn:outgoing>
+      <bpmn:startEvent id="StartEvent_find">
+        <bpmn:outgoing>Flow_find_start_compose</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="Task_find_compose" name="Составить запрос на поручительство">
+        <bpmn:incoming>Flow_find_start_compose</bpmn:incoming>
+        <bpmn:incoming>Flow_find_gw_loop</bpmn:incoming>
+        <bpmn:outgoing>Flow_find_compose_req</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:intermediateThrowEvent id="ThrowEvent_find_request" name="Запрос на поручительство">
+        <bpmn:incoming>Flow_find_compose_req</bpmn:incoming>
+        <bpmn:messageEventDefinition messageRef="Msg_request" />
+      </bpmn:intermediateThrowEvent>
+      <bpmn:intermediateCatchEvent id="CatchEvent_find_response" name="Согласие / отказ">
+        <bpmn:outgoing>Flow_find_catch_gw</bpmn:outgoing>
+        <bpmn:messageEventDefinition messageRef="Msg_response" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:exclusiveGateway id="Gateway_find_two" name="2 согласия?">
+        <bpmn:incoming>Flow_find_catch_gw</bpmn:incoming>
+        <bpmn:outgoing>Flow_find_gw_end</bpmn:outgoing>
+        <bpmn:outgoing>Flow_find_gw_loop</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="EndEvent_find" name="Поручители найдены">
+        <bpmn:incoming>Flow_find_gw_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_find_start_compose" sourceRef="StartEvent_find" targetRef="Task_find_compose" />
+      <bpmn:sequenceFlow id="Flow_find_compose_req" sourceRef="Task_find_compose" targetRef="ThrowEvent_find_request" />
+      <bpmn:sequenceFlow id="Flow_find_catch_gw" sourceRef="CatchEvent_find_response" targetRef="Gateway_find_two" />
+      <bpmn:sequenceFlow id="Flow_find_gw_end" name="да" sourceRef="Gateway_find_two" targetRef="EndEvent_find" />
+      <bpmn:sequenceFlow id="Flow_find_gw_loop" name="нет" sourceRef="Gateway_find_two" targetRef="Task_find_compose" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Sub_deposit" name="Передача депозита поручителям">
+      <bpmn:incoming>Flow_new_subA_subB</bpmn:incoming>
+      <bpmn:outgoing>Flow_new_subB_end</bpmn:outgoing>
+      <bpmn:startEvent id="StartEvent_deposit">
+        <bpmn:outgoing>Flow_dep_start_size</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="Task_deposit_size" name="Определить размер депозита">
+        <bpmn:incoming>Flow_dep_start_size</bpmn:incoming>
+        <bpmn:outgoing>Flow_dep_size_throw</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:intermediateThrowEvent id="ThrowEvent_deposit" name="Перевод депозита">
+        <bpmn:incoming>Flow_dep_size_throw</bpmn:incoming>
+        <bpmn:messageEventDefinition messageRef="Msg_deposit" />
+      </bpmn:intermediateThrowEvent>
+      <bpmn:intermediateCatchEvent id="CatchEvent_deposit_ok" name="Депозит принят">
+        <bpmn:outgoing>Flow_dep_catch_end</bpmn:outgoing>
+        <bpmn:messageEventDefinition messageRef="Msg_deposit_ok" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:endEvent id="EndEvent_deposit">
+        <bpmn:incoming>Flow_dep_catch_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_dep_start_size" sourceRef="StartEvent_deposit" targetRef="Task_deposit_size" />
+      <bpmn:sequenceFlow id="Flow_dep_size_throw" sourceRef="Task_deposit_size" targetRef="ThrowEvent_deposit" />
+      <bpmn:sequenceFlow id="Flow_dep_catch_end" sourceRef="CatchEvent_deposit_ok" targetRef="EndEvent_deposit" />
+    </bpmn:subProcess>
+  </bpmn:process>
+  <bpmn:process id="Process_members" isExecutable="false">
+    <bpmn:endEvent id="EndEvent_members_accept">
+      <bpmn:incoming>Flow_mem_accept_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="MsgStart_members_deposit" name="Перевод депозита">
+      <bpmn:outgoing>Flow_mem_dep_review</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_deposit" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_members_decide" name="Согласиться?">
+      <bpmn:incoming>Flow_mem_review_gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_gw_accept</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1fo9dtt</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:startEvent id="MsgStart_members_request" name="Запрос на поручительство">
+      <bpmn:outgoing>Flow_mem_req_review</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_request" />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_members_review" name="Рассмотреть кандидата">
+      <bpmn:incoming>Flow_mem_req_review</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_review_gw</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateThrowEvent id="Throw_members_accept" name="Согласие">
+      <bpmn:incoming>Flow_mem_gw_accept</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_accept_end</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_response" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Throw_members_decline" name="Отказ">
+      <bpmn:incoming>Flow_1fo9dtt</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_decline_end</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_response" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="EndEvent_members_decline">
+      <bpmn:incoming>Flow_mem_decline_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_mem_accept_end" sourceRef="Throw_members_accept" targetRef="EndEvent_members_accept" />
+    <bpmn:sequenceFlow id="Flow_mem_dep_review" sourceRef="MsgStart_members_deposit" targetRef="Task_members_accept_deposit" />
+    <bpmn:sequenceFlow id="Flow_mem_review_throw" sourceRef="Task_members_accept_deposit" targetRef="Throw_members_deposit_ok" />
+    <bpmn:sequenceFlow id="Flow_mem_throw_end" sourceRef="Throw_members_deposit_ok" targetRef="EndEvent_members_deposit" />
+    <bpmn:sequenceFlow id="Flow_mem_review_gw" sourceRef="Task_members_review" targetRef="Gateway_members_decide" />
+    <bpmn:sequenceFlow id="Flow_mem_gw_accept" name="да" sourceRef="Gateway_members_decide" targetRef="Throw_members_accept" />
+    <bpmn:sequenceFlow id="Flow_1fo9dtt" name="нет" sourceRef="Gateway_members_decide" targetRef="Throw_members_decline" />
+    <bpmn:sequenceFlow id="Flow_mem_req_review" sourceRef="MsgStart_members_request" targetRef="Task_members_review" />
+    <bpmn:sequenceFlow id="Flow_mem_decline_end" sourceRef="Throw_members_decline" targetRef="EndEvent_members_decline" />
+    <bpmn:endEvent id="EndEvent_members_deposit">
+      <bpmn:incoming>Flow_mem_throw_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_members_accept_deposit" name="Принять депозит">
+      <bpmn:incoming>Flow_mem_dep_review</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_review_throw</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateThrowEvent id="Throw_members_deposit_ok" name="Депозит принят">
+      <bpmn:incoming>Flow_mem_review_throw</bpmn:incoming>
+      <bpmn:outgoing>Flow_mem_throw_end</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_deposit_ok" />
+    </bpmn:intermediateThrowEvent>
+  </bpmn:process>
+  <bpmn:process id="Process_platform" isExecutable="false">
+    <bpmn:startEvent id="MsgStart_platform_deposit" name="Перевод депозита">
+      <bpmn:outgoing>Flow_plat_start_reg</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_deposit" />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_platform_register" name="Зарегистрировать депозит (Treasury/Billing)">
+      <bpmn:incoming>Flow_plat_start_reg</bpmn:incoming>
+      <bpmn:outgoing>Flow_plat_reg_receipt</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_platform_receipt" name="Выдать квитанцию">
+      <bpmn:incoming>Flow_plat_reg_receipt</bpmn:incoming>
+      <bpmn:outgoing>Flow_plat_receipt_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="EndEvent_platform">
+      <bpmn:incoming>Flow_plat_receipt_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_plat_start_reg" sourceRef="MsgStart_platform_deposit" targetRef="Task_platform_register" />
+    <bpmn:sequenceFlow id="Flow_plat_reg_receipt" sourceRef="Task_platform_register" targetRef="Task_platform_receipt" />
+    <bpmn:sequenceFlow id="Flow_plat_receipt_end" sourceRef="Task_platform_receipt" targetRef="EndEvent_platform" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_synergy">
+      <bpmndi:BPMNShape id="Participant_new_di" bpmnElement="Participant_new" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1800" height="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="40" y="22" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_new_di" bpmnElement="StartEvent_new">
+        <dc:Bounds x="80" y="105" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_new_di" bpmnElement="EndEvent_new">
+        <dc:Bounds x="1500" y="105" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470" y="145" width="150" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_find_guarantors_di" bpmnElement="Sub_find_guarantors" isExpanded="false">
+        <dc:Bounds x="270" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_deposit_di" bpmnElement="Sub_deposit" isExpanded="false">
+        <dc:Bounds x="1120" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_new_start_subA_di" bpmnElement="Flow_new_start_subA">
+        <di:waypoint x="116" y="124" />
+        <di:waypoint x="138" y="124" />
+        <di:waypoint x="138" y="100" />
+        <di:waypoint x="270" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_new_subA_subB_di" bpmnElement="Flow_new_subA_subB">
+        <di:waypoint x="370" y="110" />
+        <di:waypoint x="1120" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_new_subB_end_di" bpmnElement="Flow_new_subB_end">
+        <di:waypoint x="1220" y="100" />
+        <di:waypoint x="1360" y="100" />
+        <di:waypoint x="1360" y="124" />
+        <di:waypoint x="1500" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_platform_di" bpmnElement="Participant_platform" isHorizontal="true">
+        <dc:Bounds x="40" y="578" width="1800" height="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="40" y="482" width="200" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="MsgStart_platform_deposit_di" bpmnElement="MsgStart_platform_deposit">
+        <dc:Bounds x="1180" y="618" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1174" y="654" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_platform_register_di" bpmnElement="Task_platform_register">
+        <dc:Bounds x="1270" y="613" width="180" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_platform_receipt_di" bpmnElement="Task_platform_receipt">
+        <dc:Bounds x="1500" y="613" width="130" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_platform_di" bpmnElement="EndEvent_platform">
+        <dc:Bounds x="1680" y="623" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_plat_start_reg_di" bpmnElement="Flow_plat_start_reg">
+        <di:waypoint x="1216" y="636" />
+        <di:waypoint x="1270" y="638" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_plat_reg_receipt_di" bpmnElement="Flow_plat_reg_receipt">
+        <di:waypoint x="1450" y="638" />
+        <di:waypoint x="1500" y="638" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_plat_receipt_end_di" bpmnElement="Flow_plat_receipt_end">
+        <di:waypoint x="1630" y="638" />
+        <di:waypoint x="1680" y="641" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_members_di" bpmnElement="Participant_members" isHorizontal="true">
+        <dc:Bounds x="40" y="341" width="1800" height="200" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_members_accept_di" bpmnElement="EndEvent_members_accept">
+        <dc:Bounds x="930" y="391" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="MsgStart_members_deposit_di" bpmnElement="MsgStart_members_deposit">
+        <dc:Bounds x="1100" y="401" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1094" y="437" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_members_decide_di" bpmnElement="Gateway_members_decide" isMarkerVisible="true">
+        <dc:Bounds x="655" y="436" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="490" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="MsgStart_members_request_di" bpmnElement="MsgStart_members_request">
+        <dc:Bounds x="302" y="433" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="280" y="469" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_members_review_di" bpmnElement="Task_members_review">
+        <dc:Bounds x="445" y="425" width="150" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Throw_members_accept_di" bpmnElement="Throw_members_accept">
+        <dc:Bounds x="762" y="401" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="756" y="437" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Throw_members_decline_di" bpmnElement="Throw_members_decline">
+        <dc:Bounds x="830" y="443" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="833" y="479" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_members_decline_di" bpmnElement="EndEvent_members_decline">
+        <dc:Bounds x="922" y="456" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_members_deposit_di" bpmnElement="EndEvent_members_deposit">
+        <dc:Bounds x="1642" y="391" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_members_accept_deposit_di" bpmnElement="Task_members_accept_deposit">
+        <dc:Bounds x="1245" y="405" width="150" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Throw_members_deposit_ok_di" bpmnElement="Throw_members_deposit_ok">
+        <dc:Bounds x="1462" y="391" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1440" y="427" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_mem_accept_end_di" bpmnElement="Flow_mem_accept_end">
+        <di:waypoint x="798" y="419" />
+        <di:waypoint x="864" y="419" />
+        <di:waypoint x="864" y="409" />
+        <di:waypoint x="930" y="409" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_dep_review_di" bpmnElement="Flow_mem_dep_review">
+        <di:waypoint x="1136" y="418" />
+        <di:waypoint x="1186" y="418" />
+        <di:waypoint x="1186" y="433" />
+        <di:waypoint x="1245" y="433" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_review_throw_di" bpmnElement="Flow_mem_review_throw">
+        <di:waypoint x="1320" y="405" />
+        <di:waypoint x="1320" y="364" />
+        <di:waypoint x="1450" y="364" />
+        <di:waypoint x="1450" y="408" />
+        <di:waypoint x="1462" y="408" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_throw_end_di" bpmnElement="Flow_mem_throw_end">
+        <di:waypoint x="1498" y="408" />
+        <di:waypoint x="1570" y="408" />
+        <di:waypoint x="1570" y="410" />
+        <di:waypoint x="1642" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_review_gw_di" bpmnElement="Flow_mem_review_gw">
+        <di:waypoint x="595" y="443" />
+        <di:waypoint x="625" y="443" />
+        <di:waypoint x="625" y="464" />
+        <di:waypoint x="658" y="464" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_gw_accept_di" bpmnElement="Flow_mem_gw_accept">
+        <di:waypoint x="680" y="436" />
+        <di:waypoint x="680" y="414" />
+        <di:waypoint x="763" y="414" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="667" y="419" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1fo9dtt_di" bpmnElement="Flow_1fo9dtt">
+        <di:waypoint x="680" y="486" />
+        <di:waypoint x="680" y="514" />
+        <di:waypoint x="768" y="514" />
+        <di:waypoint x="768" y="461" />
+        <di:waypoint x="830" y="461" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="444" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_req_review_di" bpmnElement="Flow_mem_req_review">
+        <di:waypoint x="338" y="450" />
+        <di:waypoint x="402" y="450" />
+        <di:waypoint x="402" y="453" />
+        <di:waypoint x="445" y="453" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mem_decline_end_di" bpmnElement="Flow_mem_decline_end">
+        <di:waypoint x="866" y="461" />
+        <di:waypoint x="898" y="461" />
+        <di:waypoint x="898" y="474" />
+        <di:waypoint x="922" y="474" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_request_di" bpmnElement="MF_request">
+        <di:waypoint x="320" y="140" />
+        <di:waypoint x="320" y="433" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="299" y="166" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_agree_di" bpmnElement="MF_agree">
+        <di:waypoint x="780" y="401" />
+        <di:waypoint x="780" y="100" />
+        <di:waypoint x="370" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="752" y="204" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_decline_di" bpmnElement="MF_decline">
+        <di:waypoint x="830" y="461" />
+        <di:waypoint x="810" y="461" />
+        <di:waypoint x="810" y="80" />
+        <di:waypoint x="370" y="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="802" y="226" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_deposit_members_di" bpmnElement="MF_deposit_members">
+        <di:waypoint x="1159" y="140" />
+        <di:waypoint x="1159" y="279" />
+        <di:waypoint x="1118" y="279" />
+        <di:waypoint x="1118" y="401" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1205" y="152" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_deposit_ok_di" bpmnElement="MF_deposit_ok">
+        <di:waypoint x="1480" y="390" />
+        <di:waypoint x="1480" y="279" />
+        <di:waypoint x="1213" y="279" />
+        <di:waypoint x="1213" y="139" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1169" y="191" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_deposit_platform_di" bpmnElement="MF_deposit_platform">
+        <di:waypoint x="1198" y="140" />
+        <di:waypoint x="1198" y="618" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1239" y="249" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_138ofsc">
+    <bpmndi:BPMNPlane id="BPMNPlane_18nnlko" bpmnElement="Sub_find_guarantors">
+      <bpmndi:BPMNShape id="Task_find_compose_di" bpmnElement="Task_find_compose">
+        <dc:Bounds x="250" y="160" width="130" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CatchEvent_find_response_di" bpmnElement="CatchEvent_find_response">
+        <dc:Bounds x="420" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="396" y="296" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_find_two_di" bpmnElement="Gateway_find_two" isMarkerVisible="true">
+        <dc:Bounds x="500" y="160" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="515" y="214" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ThrowEvent_find_request_di" bpmnElement="ThrowEvent_find_request">
+        <dc:Bounds x="420" y="170" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="398" y="206" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_find_di" bpmnElement="EndEvent_find">
+        <dc:Bounds x="602" y="164" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="607" y="204" width="61" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_find_di" bpmnElement="StartEvent_find">
+        <dc:Bounds x="152" y="164" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_find_start_compose_di" bpmnElement="Flow_find_start_compose">
+        <di:waypoint x="188" y="184" />
+        <di:waypoint x="219" y="184" />
+        <di:waypoint x="219" y="185" />
+        <di:waypoint x="250" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_find_gw_loop_di" bpmnElement="Flow_find_gw_loop">
+        <di:waypoint x="525" y="210" />
+        <di:waypoint x="525" y="325" />
+        <di:waypoint x="315" y="325" />
+        <di:waypoint x="315" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="512" y="303" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_find_compose_req_di" bpmnElement="Flow_find_compose_req">
+        <di:waypoint x="380" y="196" />
+        <di:waypoint x="400" y="196" />
+        <di:waypoint x="400" y="185" />
+        <di:waypoint x="420" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_find_catch_gw_di" bpmnElement="Flow_find_catch_gw">
+        <di:waypoint x="456" y="278" />
+        <di:waypoint x="488" y="278" />
+        <di:waypoint x="488" y="185" />
+        <di:waypoint x="500" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_find_gw_end_di" bpmnElement="Flow_find_gw_end">
+        <di:waypoint x="548" y="183" />
+        <di:waypoint x="602" y="183" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="567" y="168" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1t1pol9">
+    <bpmndi:BPMNPlane id="BPMNPlane_130vubo" bpmnElement="Sub_deposit">
+      <bpmndi:BPMNShape id="StartEvent_deposit_di" bpmnElement="StartEvent_deposit">
+        <dc:Bounds x="180" y="170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_deposit_size_di" bpmnElement="Task_deposit_size">
+        <dc:Bounds x="250" y="160" width="150" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ThrowEvent_deposit_di" bpmnElement="ThrowEvent_deposit">
+        <dc:Bounds x="440" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="434" y="196" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CatchEvent_deposit_ok_di" bpmnElement="CatchEvent_deposit_ok">
+        <dc:Bounds x="440" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="236" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_deposit_di" bpmnElement="EndEvent_deposit">
+        <dc:Bounds x="540" y="170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_dep_start_size_di" bpmnElement="Flow_dep_start_size">
+        <di:waypoint x="216" y="188" />
+        <di:waypoint x="250" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_dep_size_throw_di" bpmnElement="Flow_dep_size_throw">
+        <di:waypoint x="400" y="185" />
+        <di:waypoint x="440" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_dep_catch_end_di" bpmnElement="Flow_dep_catch_end">
+        <di:waypoint x="476" y="278" />
+        <di:waypoint x="508" y="278" />
+        <di:waypoint x="508" y="188" />
+        <di:waypoint x="540" y="188" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
