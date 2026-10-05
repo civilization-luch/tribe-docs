@@ -20,6 +20,17 @@
 | `slug` | URL-идентификатор (опционально, авто из id[:8]) |
 | `community_id` | ID сообщества |
 | `created_at` | Дата создания |
+| `metadata` | Свободные метаданные (JSON), см. ниже |
+
+**Привязка репозитория (`metadata.repository`).** Workspace можно связать с git-репозиторием, который использует community agent. Форма зафиксирована схемой `schemas/workspaces/metadata.schema.json`.
+
+```json
+{ "repository": { "url": "https://github.com/org/repo", "branch": "main" } }
+```
+
+- Поля: `url` (обязательно, https или ssh), `branch`, `provider`, `path`.
+- **Credentials запрещены**: токены и SSH-ключи хранятся только в конфиге агента, не в metadata.
+- Чтение: `repoUrl` / `repoBranch` на `WorkspaceType`. Запись: мутация `setWorkspaceRepository(workspaceId, url, branch)` (owner/admin), эмитит `WorkspaceUpdated`.
 
 ### Issue
 

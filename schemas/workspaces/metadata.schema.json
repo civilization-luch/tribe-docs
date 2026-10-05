@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workspace Metadata",
+  "description": "Freeform metadata for a workspace. The optional `repository` key binds the workspace to a git repository used by the community agent.",
+  "type": "object",
+  "properties": {
+    "repository": {
+      "type": "object",
+      "description": "Git repository bound to this workspace. Credentials (tokens, SSH keys) MUST NOT be stored here — they live only in the agent configuration.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Repository URL (https or ssh). Must not embed credentials such as https://user:pass@host/repo."
+        },
+        "branch": { "type": "string", "description": "Branch to check out (optional)" },
+        "provider": { "type": "string", "description": "Hosting provider, e.g. github (optional)" },
+        "path": { "type": "string", "description": "Subdirectory inside the repository (optional)" }
+      },
+      "required": ["url"],
+      "additionalProperties": false,
+      "propertyNames": {
+        "not": { "pattern": "(?i)(token|password|secret|credential|api_?key|oauth)" }
+      }
+    }
+  },
+  "additionalProperties": true
+}
