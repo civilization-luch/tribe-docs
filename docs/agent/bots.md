@@ -126,11 +126,21 @@ type Query {
 
 ## Аутентификация
 
-Долгоживущий JWT (access token с expiry ~365 дней) как Bearer-токен
-в `Authorization` header — ровно как и человек.
+Боты — это **service accounts** в auth-сервисе `tribe-auth` (не аккаунты:
+без email/пароля). Токены выдаёт только engine через internal API auth-сервиса:
 
-Отличие: бот не логинится через `login(email, password)` — у него
-может не быть пароля. Только через готовый токен.
+```
+POST {AUTH_URL}/v1/internal/service-accounts              # создать бота
+POST {AUTH_URL}/v1/internal/service-accounts/{id}/tokens  # выдать access token
+DELETE .../tokens                                        # отзыв
+```
+
+Токен — обычный JWT (RS256, `aud` = client_id приложения, `sub` = id бота),
+используется как `Authorization: Bearer` — ровно как у человека. Долгоживущие
+токены выдаются только через этот internal-канал; refresh-токенов у ботов нет.
+
+Отличие от человека: бот не логинится через `login(email, password)` — у него
+нет credentials. Владелец бота (`creator_account_id`) управляет им из панели.
 
 ## UI
 

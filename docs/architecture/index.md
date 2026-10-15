@@ -12,7 +12,8 @@ graph TB
 end
 
     subgraph Engine["Platform Core"]
-        CE["Core Engine<br/>API / Auth / RBAC"]
+        CE["Core Engine<br/>API / RBAC"]
+        AUTH["tribe-auth<br/>Identity / JWT RS256 + JWKS"]
         MR["Module Registry"]
         EE["Event Engine<br/>Notification / Webhook"]
     end
@@ -56,6 +57,7 @@ end
 
     CE --> MR
     CE --> EE
+    AUTH --> CE
 
     MR --> M1
     MR --> M2
