@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tribe.partnr.icu/schemas/intake/requests.schema.json",
+  "title": "Request Intake",
+  "description": "Payload of POST /api/intake/requests — an external app files a user request as an issue in a community workspace. Authenticated with the X-Intake-Token header (TRIBE_INTAKE_TOKEN), not with a user session.",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Target community (ULID). The workspace must belong to it."
+    },
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Target workspace (ULID) inside the community."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "description": "Short human title; long requests are trimmed by the caller."
+    },
+    "description": { "type": "string", "maxLength": 8000 },
+    "issue_type": {
+      "type": "string",
+      "enum": ["bug", "feature", "task", "improvement"],
+      "default": "task",
+      "description": "Platform issue types. Clients map their own kinds: idea → feature, problem → bug, usability → improvement (+ label usability), film → feature (+ label film)."
+    },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 40 },
+      "maxItems": 10
+    },
+    "source": {
+      "type": "object",
+      "description": "Where the request came from. `app` and `external_id` make retries idempotent: a second call with the same pair returns the existing issue.",
+      "properties": {
+        "app": { "type": "string", "maxLength": 40, "description": "Client app id, e.g. video_review." },
+        "url": { "type": "string", "maxLength": 500, "description": "Page the request was filed from." },
+        "userAgent": { "type": "string", "maxLength": 400 },
+        "sessionId": { "type": "string", "maxLength": 80 },
+        "external_id": { "type": "string", "maxLength": 120 }
+      },
+      "additionalProperties": true
+    },
+    "external_id": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Caller-side request id. Repeated submissions return the first issue instead of creating another."
+    },
+    "browser_logs": {
+      "type": "string",
+      "description": "JSON string with the client log snapshot; truncated server-side to TRIBE_INTAKE_MAX_LOGS_CHARS."
+    },
+    "requester": {
+      "type": "object",
+      "description": "Who filed the request. All fields are optional — an anonymous visitor sends an empty object and the issue is authored by intake:<app>.",
+      "properties": {
+        "account_id": { "type": "string", "maxLength": 64 },
+        "email": { "type": "string", "maxLength": 255 },
+        "name": { "type": "string", "maxLength": 120 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["community_id", "workspace_id", "title"],
+  "additionalProperties": false
+}
