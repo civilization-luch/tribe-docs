@@ -2,13 +2,16 @@
 
 Задачи, воркспейсы, milestones, доски, комментарии.
 
-## Сущности
+## Модель
 
-- **Workspace** — контейнер для группы issues (фича, модуль, релиз)
-- **Issue** — задача/баг/фича/улучшение
-- **Milestone** — веха внутри workspace (дата + набор issues)
-- **Board** — канбан-доска (view/projection с колонками и фильтрами)
-- **Comment** — комментарий к issue (пользовательский или системный)
+- **Workspace** — постоянная рабочая область: issues, discussions, позже documents.
+  Принадлежит одной группе или сообществу. Repository — опциональная интеграция.
+- **Issue** — задача/баг/фича/улучшение. Принадлежит ровно одному workspace и может
+  входить в несколько проектов.
+- **Project** — представление/план над issues, а не контейнер. См. [Projects](projects.md).
+- **Milestone** — веха внутри workspace (дата + набор issues).
+- **Board** — устаревшая отдельная канбан-сущность; канбан живёт как view проекта.
+- **Comment** — комментарий к issue или discussion.
 
 ### Workspace
 
@@ -19,8 +22,21 @@
 | `description` | Описание |
 | `slug` | URL-идентификатор (опционально, авто из id[:8]) |
 | `community_id` | ID сообщества |
+| `group_id` | ID группы-владельца (`null` — workspace сообщества) |
+| `is_default` | Default workspace в своём scope (community или group) |
 | `created_at` | Дата создания |
 | `metadata` | Свободные метаданные (JSON), см. ниже |
+
+**Владение.** У workspace один владелец: группа (`group_id`) или сообщество
+(`group_id = null`). Multi-owner не поддерживается. Общий доступ нескольким группам
+проектируется через access grants, а не через нескольких владельцев.
+
+**Default workspace.** В каждом scope может быть один default workspace: отдельно для
+сообщества (`group_id = null`) и отдельно для каждой группы. Group workspace создаётся
+по требованию при первой задаче/обсуждении, если его ещё нет.
+
+**Видимость.** Workspace группы наследует видимость группы (`public` / `private` /
+`hidden`). Workspace сообщества доступен участникам сообщества.
 
 **Привязка репозитория (`metadata.repository`).** Workspace можно связать с git-репозиторием, который использует community agent. Форма зафиксирована схемой `schemas/workspaces/metadata.schema.json`.
 
@@ -37,7 +53,9 @@
 | Поле | Описание |
 |---|---|
 | `id` | ULID |
-| `workspace_id` | ULID workspace |
+| `workspace_id` | ULID workspace (обязателен) |
+| `community_id` | ID сообщества |
+| `group_id` | ID группы (совпадает с владельцем workspace или `null`) |
 | `title` | Заголовок |
 | `description` | Описание |
 | `issue_type` | `bug` / `feature` / `task` / `improvement` |
@@ -49,6 +67,13 @@
 | `checklist` | Чек-лист ([{ "text": "...", "done": false }]) |
 | `links` | Связи с другими issues ([{ "target_id": "...", "type": "blocks" }]) |
 | `created_at` | Дата создания |
+
+Инварианты:
+
+- issue всегда принадлежит одному workspace;
+- если workspace принадлежит группе, `issue.group_id` совпадает с этой группой;
+- issue community-workspace не имеет `group_id`;
+- перенос issue между workspace меняет `workspace_id` и `group_id` вместе (`IssueMoved`).
 
 ### Issue Links (встроены в Issue)
 
@@ -105,9 +130,11 @@
 
 | Команда | Описание |
 |---|---|
-| `CreateWorkspace` | Создать workspace |
+| `CreateWorkspace` | Создать workspace (community или group-owned) |
 | `UpdateWorkspace` | Обновить workspace |
-| `CreateIssue` | Создать issue |
+| `SetDefaultWorkspace` | Назначить default workspace в его scope |
+| `CreateIssue` | Создать issue (workspace и group согласуются) |
+| `MoveIssue` | Перенести issue в другой workspace |
 | `UpdateIssue` | Обновить issue |
 | `AssignIssue` | Назначить ответственного |
 | `ChangeIssueStatus` | Сменить статус (open → in_progress → resolved → closed) |
@@ -124,10 +151,11 @@
 
 | Событие | Описание |
 |---|---|
-| `WorkspaceCreated` | Workspace создан |
+| `WorkspaceCreated` | Workspace создан (`group_id`, `is_default`) |
 | `WorkspaceUpdated` | Workspace обновлён |
 | `IssueCreated` | Issue создана |
 | `IssueUpdated` | Issue обновлена |
+| `IssueMoved` | Issue перенесена в другой workspace/group |
 | `IssueAssigned` | Назначен ответственный |
 | `IssueStatusChanged` | Статус изменён |
 | `IssueLinked` | Связь установлена |
@@ -152,7 +180,18 @@
 
 ## Связи
 
+- С Groups — workspace может принадлежать группе; группа наследует видимость и роли.
+- С [Projects](projects.md) — проект собирает issues из одного или нескольких workspace.
 - С [Reputation](reputation.md) — бонусы за выполнение задач
 - С [Content](content.md) — объявления о задачах
 - С [Membership](membership.md) — проверка членства при назначении
 - С [Notifications](notifications.md) — уведомления о назначениях, комментариях, смене статуса (запланировано)
+
+## GraphQL
+
+- `workspace(id)` — workspace по ID или slug.
+- `workspaces(communityId, groupId)` — community и доступные group workspaces.
+- `groupWorkspaces(groupId)` — workspace конкретной группы.
+- `defaultWorkspace(communityId, groupId)` — default workspace в нужном scope.
+- `createWorkspace(input: {communityId, groupId?, name, ...})` — создать workspace.
+- `deleteWorkspace` — запрещён, если в workspace есть issues или discussions.
