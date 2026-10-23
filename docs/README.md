@@ -56,6 +56,8 @@
 - [Billing](modules/billing.md) — платежи, подписки, сплит
 - [Bookings](modules/bookings.md) — бронирование комнат и пространств
 - [Issues & Workspaces](modules/issues.md) — задачи, воркспейсы, milestones, доски, комментарии
+- [Discussions](modules/discussions.md) — обсуждения внутри workspace
+- [Projects](modules/projects.md) — представления и планы над issues
 - [Notifications](modules/notifications.md) — уведомления (назначения, комментарии, приглашения) — запланировано
 - [Treasury](modules/treasury.md) — казна, бюджеты, прозрачность
 - [Content](modules/content.md) — афиша, объявления, обсуждения
