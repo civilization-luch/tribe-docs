@@ -56,6 +56,15 @@ IssueStatusChanged → SubscriptionRunner → Notification.created
 | `invited` | `MemberJoined` (approve) | `user_id` вступившего | "You joined E2E Community" |
 | `linked` | `IssueLinked` | `assignee_id` | "Write tests was linked as blocks" |
 
+## Ссылки на workspace
+
+События discussions и issues формируют ссылки с учётом workspace:
+
+- discussion status/update → `/community/{community}/workspaces/{workspace}?tab=discussions`;
+- issue events → `/community/{community}/issues/{issue}`.
+
+Workspace detail читает `?tab=discussions` и открывает вкладку Discussions.
+
 ## GraphQL API
 
 ```graphql

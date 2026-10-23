@@ -10,7 +10,7 @@
   входить в несколько проектов.
 - **Project** — представление/план над issues, а не контейнер. См. [Projects](projects.md).
 - **Milestone** — веха внутри workspace (дата + набор issues).
-- **Board** — устаревшая отдельная канбан-сущность; канбан живёт как view проекта.
+- **Board** — legacy-модель удалена из API и UI; канбан живёт как view проекта.
 - **Comment** — комментарий к issue или discussion.
 
 ### Workspace
@@ -100,19 +100,10 @@
 
 ### Board
 
-> DEPRECATED. Отдельная сущность канбан-доски больше не используется: канбан реализуется как board view внутри проекта (`Project.settings.statuses` задают колонки). Сохранена только для переноса данных — см. `scripts/migrate_boards_to_projects.py`.
-
-| Поле | Описание |
-|---|---|
-| `id` | ULID |
-| `name` | Название |
-| `description` | Описание |
-| `community_id` | ID сообщества |
-| `view_type` | `kanban` (по умолчанию) |
-| `columns` | JSON: [{ "id": "open", "title": "To Do" }, ...] |
-| `filters` | JSON: { "workspace_ids": [...], "statuses": [...], "assignee_ids": [...], "labels": [...] } |
-| `items` | Резолвер — все issues, отфильтрованные по filters |
-| `created_at` | Дата создания |
+Legacy standalone Board удалён из GraphQL API и frontend-маршрутов. Канбан реализуется как
+board view внутри проекта (`Project.settings.statuses` задают колонки). Агрегат `Board`
+остался только для чтения исторических событий и скрипта
+`scripts/migrate_boards_to_projects.py`.
 
 ### Comment
 
@@ -142,8 +133,6 @@
 | `UnlinkIssues` | Убрать связь |
 | `CreateMilestone` | Создать milestone |
 | `ReachMilestone` | Отметить milestone достигнутым |
-| `CreateBoard` | Создать канбан-доску (DEPRECATED) |
-| `UpdateBoard` | Обновить доску (DEPRECATED) |
 | `CreateComment` | Добавить комментарий |
 | `UpdateComment` | Редактировать комментарий |
 
@@ -162,8 +151,6 @@
 | `IssueUnlinked` | Связь убрана |
 | `MilestoneCreated` | Milestone создан |
 | `MilestoneReached` | Milestone достигнут |
-| `BoardCreated` | Доска создана (DEPRECATED) |
-| `BoardUpdated` | Доска обновлена (DEPRECATED) |
 | `CommentCreated` | Комментарий создан |
 | `CommentUpdated` | Комментарий отредактирован |
 
