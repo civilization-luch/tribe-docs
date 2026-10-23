@@ -24,10 +24,19 @@
 | `description` | Описание |
 | `community_id` | ID сообщества |
 | `group_id` | ID группы (пусто для проекта сообщества) |
+| `owner_id` | Владелец проекта (пользователь) |
+| `status` | `planned` / `active` / `paused` / `done` / `archived` |
+| `start_date` | Дата начала |
+| `due_date` | Целевая дата |
 | `views` | Представления проекта (board/table/roadmap) |
 | `items` | Элементы проекта (задачи и черновики) |
 | `settings` | Настройки (в т.ч. `statuses` и `fields`) |
 | `created_at` | Дата создания |
+
+`projects(communityId, includeArchived)` по умолчанию скрывает архивные проекты.
+Элементы проекта читаются через `items(limit, offset)`; `itemCount` содержит общее количество.
+Issue для элементов загружаются пакетно (`get_many`) и проверяются по community/group ACL.
+История изменений проекта доступна через `entityHistory(aggregateType: "project", aggregateId: id)`.
 
 ### Board view
 
