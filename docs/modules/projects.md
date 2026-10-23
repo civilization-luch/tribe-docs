@@ -10,8 +10,9 @@
 
 Канбан реализован как **board view внутри проекта**: колонки задаются `view.config.columns`,
 а список доступных статусов — `Project.settings.statuses`. Если `settings.statuses` пуст,
-используются колонки board view (это важно для мигрированных досок). Отдельная сущность Board
-сохранена только для переноса данных (см. `scripts/migrate_boards_to_projects.py`).
+используются колонки board view (это важно для мигрированных досок). Legacy Board удалён из
+GraphQL API и UI; агрегат `Board` оставлен только для чтения исторических событий и скрипта
+`scripts/migrate_boards_to_projects.py`.
 
 ## Сущности
 
@@ -25,6 +26,7 @@
 | `community_id` | ID сообщества |
 | `group_id` | ID группы-владельца (пусто для проекта сообщества) |
 | `collaborator_group_ids` | Группы-партнёры, которым доступен проект |
+| `source_workspace_ids` | Workspace-источники; пусто = без ограничения |
 | `owner_id` | Ответственный/lead проекта (пользователь) |
 | `status` | `planned` / `active` / `paused` / `done` / `archived` |
 | `start_date` | Дата начала |
@@ -58,6 +60,20 @@ Issue для элементов загружаются пакетно (`get_many
 `collaborator_group_ids` — это доступ, а не совладение. Владелец проекта всегда один:
 группа (`group_id`) или сообщество (`group_id` пуст).
 
+### Source workspaces
+
+`source_workspace_ids` ограничивает набор workspace, из которых проект собирает issues.
+
+- Пустой список — проект принимает issues из любого доступного workspace.
+- Заданный список — issue можно добавить только из этих workspace.
+- Workspace-источник должен принадлежать сообществу проекта и быть доступным owner/collaborator
+  группе (или быть community workspace).
+- Ограничение проверяется при `addProjectItem` и `convertDraft`.
+- Новые issues, создаваемые из проекта, предлагают только source workspaces.
+
+`projects` поддерживает фильтры `scope` (`all` / `community` / `group` / `shared`),
+`sharedWithGroupId` и `sourceWorkspaceId`.
+
 ### Group projects
 
 - `group_id` не задан — проект сообщества.
@@ -70,7 +86,8 @@ Issue для элементов загружаются пакетно (`get_many
 - Группа не может быть удалена, пока у неё есть workspace или проекты-владельцы. Проекты группы
   не заменяют workspace. При удалении группы её ID убирается из collaborator-списков проектов.
 - В групповой проект можно добавить issue из workspace группы-владельца или группы-партнёра.
-  Community issues добавлять можно; issue из чужой группы — нельзя.
+  Community issues добавлять можно; issue из чужой группы — нельзя. Если задан
+  `source_workspace_ids`, issue из workspace вне списка отклоняется.
 - Видимость issue по-прежнему определяется workspace/group ACL. Если у пользователя нет доступа
   к issue группы-партнёра, проект может показать элемент без данных issue.
 
@@ -96,7 +113,7 @@ Issue для элементов загружаются пакетно (`get_many
 | `category` | `collaboration` |
 | `modifiers` | `["projects"]` |
 | `depends_on` | `["workspaces"]` |
-| `route` | `/community/:id/projects` (доска — `/community/:id/boards/:boardId`) |
+| `route` | `/community/:id/projects` (board view внутри `/projects/:projectId`) |
 | `handles_entities` | `project` |
 
 ### Настройки

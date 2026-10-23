@@ -29,14 +29,33 @@
 
 **Владение.** У workspace один владелец: группа (`group_id`) или сообщество
 (`group_id = null`). Multi-owner не поддерживается. Общий доступ нескольким группам
-проектируется через access grants, а не через нескольких владельцев.
+выдаётся через `WorkspaceAccess` grants, а не через нескольких владельцев.
+
+### WorkspaceAccess
+
+| Поле | Описание |
+|---|---|
+| `id` | deterministic id от `workspace_id + group_id` |
+| `workspace_id` | ID workspace |
+| `group_id` | ID группы, которой выдан доступ |
+| `role` | `viewer` / `contributor` / `manager` |
+| `community_id` | ID сообщества |
+
+- `viewer` — видит workspace, issues и discussions, но не создаёт и не меняет контент.
+- `contributor` — может создавать issues/discussions и менять контент.
+- `manager` — как contributor; настройки workspace и управление grants остаются у
+  группы-владельца и owner/admin сообщества.
+- Owner group, owner/admin сообщества сохраняют полный доступ.
+- Grant не меняет владельца workspace.
+- При удалении группы её grants автоматически отзываются.
 
 **Default workspace.** В каждом scope может быть один default workspace: отдельно для
 сообщества (`group_id = null`) и отдельно для каждой группы. Group workspace создаётся
 по требованию при первой задаче/обсуждении, если его ещё нет.
 
 **Видимость.** Workspace группы наследует видимость группы (`public` / `private` /
-`hidden`). Workspace сообщества доступен участникам сообщества.
+`hidden`). Workspace сообщества доступен участникам сообщества. Grant расширяет видимость
+workspace на участников указанной группы независимо от видимости группы-владельца.
 
 **Привязка репозитория (`metadata.repository`).** Workspace можно связать с git-репозиторием, который использует community agent. Форма зафиксирована схемой `schemas/workspaces/metadata.schema.json`.
 
@@ -124,6 +143,9 @@ board view внутри проекта (`Project.settings.statuses` задают
 | `CreateWorkspace` | Создать workspace (community или group-owned) |
 | `UpdateWorkspace` | Обновить workspace |
 | `SetDefaultWorkspace` | Назначить default workspace в его scope |
+| `GrantWorkspaceAccess` | Выдать доступ группе (`viewer`/`contributor`/`manager`) |
+| `UpdateWorkspaceAccess` | Изменить роль grant |
+| `RevokeWorkspaceAccess` | Отозвать grant |
 | `CreateIssue` | Создать issue (workspace и group согласуются) |
 | `MoveIssue` | Перенести issue в другой workspace |
 | `UpdateIssue` | Обновить issue |
@@ -142,6 +164,9 @@ board view внутри проекта (`Project.settings.statuses` задают
 |---|---|
 | `WorkspaceCreated` | Workspace создан (`group_id`, `is_default`) |
 | `WorkspaceUpdated` | Workspace обновлён |
+| `WorkspaceAccessGranted` | Группе выдан доступ к workspace |
+| `WorkspaceAccessUpdated` | Роль grant изменена |
+| `WorkspaceAccessRevoked` | Доступ группы отозван |
 | `IssueCreated` | Issue создана |
 | `IssueUpdated` | Issue обновлена |
 | `IssueMoved` | Issue перенесена в другой workspace/group |
@@ -182,3 +207,7 @@ board view внутри проекта (`Project.settings.statuses` задают
 - `defaultWorkspace(communityId, groupId)` — default workspace в нужном scope.
 - `createWorkspace(input: {communityId, groupId?, name, ...})` — создать workspace.
 - `deleteWorkspace` — запрещён, если в workspace есть issues или discussions.
+- `WorkspaceType.accessGrants` — grants, доступны только тем, кто может управлять доступом.
+- `grantWorkspaceAccess(input: {workspaceId, groupId, role})`.
+- `updateWorkspaceAccess(input: {accessId, role})`.
+- `revokeWorkspaceAccess(input: {accessId})`.
