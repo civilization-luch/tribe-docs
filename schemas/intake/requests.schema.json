@@ -2,20 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tribe.partnr.icu/schemas/intake/requests.schema.json",
   "title": "Request Intake",
-  "description": "Payload of POST /api/intake/requests — an external app files a user request as an issue in a community workspace. Authenticated with the X-Intake-Token header (TRIBE_INTAKE_TOKEN), not with a user session.",
+  "description": "Legacy payload of POST /api/intake/requests. The endpoint is deprecated and now creates a SupportRequest bound to a SupportSource; it never creates an issue. Authenticated with the X-Intake-Token header (TRIBE_INTAKE_TOKEN), not with a user session. New integrations should use POST /api/communities/{community_id}/support/requests.",
   "type": "object",
   "properties": {
     "community_id": {
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "description": "Target community (ULID). The workspace must belong to it."
+      "description": "Target community (ULID or slug)."
     },
     "workspace_id": {
       "type": "string",
-      "minLength": 1,
       "maxLength": 64,
-      "description": "Target workspace (ULID) inside the community."
+      "description": "Deprecated and ignored. Kept so old callers keep validating."
     },
     "title": {
       "type": "string",
@@ -28,7 +27,7 @@
       "type": "string",
       "enum": ["bug", "feature", "task", "improvement"],
       "default": "task",
-      "description": "Platform issue types. Clients map their own kinds: idea → feature, problem → bug, usability → improvement (+ label usability), film → feature (+ label film)."
+      "description": "Deprecated and ignored. The legacy endpoint no longer creates issues."
     },
     "labels": {
       "type": "array",
@@ -37,9 +36,10 @@
     },
     "source": {
       "type": "object",
-      "description": "Where the request came from. `app` and `external_id` make retries idempotent: a second call with the same pair returns the existing issue.",
+      "description": "Where the request came from. `source.source_id` selects a SupportSource directly; otherwise `source.app` is matched against SupportSource.app_id. `external_id` makes retries idempotent per source.",
       "properties": {
-        "app": { "type": "string", "maxLength": 40, "description": "Client app id, e.g. video_review." },
+        "source_id": { "type": "string", "maxLength": 64, "description": "SupportSource ID. Takes precedence over `app`." },
+        "app": { "type": "string", "maxLength": 40, "description": "Client app id, e.g. video_review. Matched against SupportSource.app_id." },
         "url": { "type": "string", "maxLength": 500, "description": "Page the request was filed from." },
         "userAgent": { "type": "string", "maxLength": 400 },
         "sessionId": { "type": "string", "maxLength": 80 },
@@ -50,7 +50,7 @@
     "external_id": {
       "type": "string",
       "maxLength": 120,
-      "description": "Caller-side request id. Repeated submissions return the first issue instead of creating another."
+      "description": "Caller-side request id. Repeated submissions with the same source return the first SupportRequest instead of creating another."
     },
     "browser_logs": {
       "type": "string",
@@ -58,7 +58,7 @@
     },
     "requester": {
       "type": "object",
-      "description": "Who filed the request. All fields are optional — an anonymous visitor sends an empty object and the issue is authored by intake:<app>.",
+      "description": "Who filed the request. All fields are optional. The SupportRequest author is `requester.account_id` when present, otherwise intake:<app>.",
       "properties": {
         "account_id": { "type": "string", "maxLength": 64 },
         "email": { "type": "string", "maxLength": 255 },
@@ -67,6 +67,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["community_id", "workspace_id", "title"],
+  "required": ["community_id", "title"],
   "additionalProperties": false
 }
