@@ -75,6 +75,34 @@
 └─────────────┴──────────────────────┘
 ```
 
+## Группы, workspace и проекты
+
+Современная структура контента сообщества:
+
+- **Group** — команда и governance-скоуп. Владеет workspace и проектами.
+- **Workspace** — постоянная рабочая область: issues, discussions, documents.
+- **Project** — представление/план над issues, не контейнер.
+- **Issue** — принадлежит одному workspace и может входить в несколько проектов.
+
+У workspace один владелец: группа или сообщество. Доступ нескольким группам выдаётся через
+`WorkspaceAccess` grants, а не через нескольких владельцев.
+
+### Пример: Platform community
+
+| Группа | Workspace | Repo |
+|---|---|---|
+| Platform Core | Platform Core, Docs | `tribe`, `tribe-docs` |
+| Product & Community | Product & UX, Community Operations | `tribe` (`apps/tribe-front`) |
+| Agents & Infrastructure | Agents, Infrastructure | `tribe-agent`, `tribe` (`deploy`) |
+| community | Requests, Guarantee Engine | — |
+
+Проекты: `Platform Roadmap`, `Release Train`, `Technical Debt`, `Docs Roadmap`,
+`Product Discovery`, `Onboarding`, `Agent MVP`, `MCP & Integrations`,
+`Deploy & Reliability`, `Guarantee Engine`, `Support Module`.
+
+`source_workspace_ids` ограничивает workspace-источники проекта.
+`collaborator_group_ids` даёт доступ группам-партнёрам без совладения.
+
 ## Технически
 
 - SPA (React / Vue / Solid)
