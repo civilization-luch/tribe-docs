@@ -59,7 +59,7 @@ Community MCP Server авторизуется как **bot-участник** с
 
 | Tool | Параметры | Описание |
 |---|---|---|
-| `create_issue` | `title`, `description`, `workspace_id`, `assignee?`, `priority?`, `labels?` | Создать issue |
+| `create_issue` | `title`, `description`, `workspace_id`, `assignee?`, `priority?`, `labels?`, `watchers?` | Создать issue и подписать наблюдателей |
 | `update_issue` | `issue_id`, `status?`, `comment?` | Обновить issue (статус, добавить комментарий) |
 | `search_issues` | `query`, `status?`, `assignee?`, `limit?` | Полнотекстовый поиск issues |
 | `get_issue` | `issue_id` | Получить детали issue |
