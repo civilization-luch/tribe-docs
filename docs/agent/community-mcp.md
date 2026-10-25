@@ -48,7 +48,8 @@ Community MCP Server авторизуется как **bot-участник** с
 | `community://info` | Информация о сообществе (название, пресет, участники) |
 | `community://issues/{id}` | Детали issue (описание, статус, assignee, комментарии) |
 | `community://issues?workspace=...&status=open&assignee=@agent` | Поиск issues по фильтру |
-| `community://workspaces/{id}` | Детали workspace и milestones |
+| `community://workspaces/{id}` | Детали workspace, milestones и привязанный репозиторий |
+| `community://projects/{id}` | Детали проекта и его элементы |
 | `community://boards/{id}` | Канбан-доска с items (DEPRECATED) |
 | `community://proposals/{id}` | Голосование, статус, результаты |
 | `community://metrics` | Бизнес-метрики сообщества |
@@ -67,6 +68,17 @@ Community MCP Server авторизуется как **bot-участник** с
 | `get_board` | `board_id` | Получить канбан-доску с items (DEPRECATED) |
 | `get_member_reputation` | `member_id` | Репутация участника |
 | `notify` | `channel`, `message` | Отправить уведомление (Telegram, чат сообщества) |
+| `watch_issue` / `unwatch_issue` | `issue_id` | Подписка/отписка на уведомления по issue |
+| `set_workspace_repository` | `workspace_id`, `url`, `branch?` | Привязать Git-репозиторий к workspace |
+| `create_project` | `name`, `community_id`, `group_id?`, `source_workspace_ids?`, `owner_id?` | Создать проект |
+| `add_project_item` | `project_id`, `issue_id`, `status?` | Добавить issue в проект |
+| `list_projects` / `get_project` | `community_id` / `project_id` | Проекты сообщества и элементы проекта |
+| `create_group` | `community_id`, `name`, `visibility?`, `group_type?` | Создать группу |
+| `add_group_member` | `group_id`, `member_id`, `role?` | Добавить участника в группу |
+| `create_invitation_link` | `community_id`, `role?`, `max_uses?`, `expires_at?` | Создать инвайт-ссылку |
+| `log_run` | `action`, `kind?`, `title?`, `summary?`, `tags?`, `issue_id?`, `request_id?`, `session_id?`, `usage?` | Журнал прогонов агента: `start` / `finish` / `link`, расход токенов и стоимость |
+
+Полный список (63 инструмента) — `tools/list`; он же источник истины при расхождении с таблицей.
 
 ## Использование в Agent'ах
 
