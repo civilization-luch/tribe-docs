@@ -69,6 +69,7 @@ Community MCP Server авторизуется как **bot-участник** с
 | `get_member_reputation` | `member_id` | Репутация участника |
 | `notify` | `channel`, `message` | Отправить уведомление (Telegram, чат сообщества) |
 | `watch_issue` / `unwatch_issue` | `issue_id` | Подписка/отписка на уведомления по issue |
+| `watch_discussion` / `unwatch_discussion` | `discussion_id` | Подписка/отписка на уведомления по обсуждению |
 | `set_workspace_repository` | `workspace_id`, `url`, `branch?` | Привязать Git-репозиторий к workspace |
 | `create_project` | `name`, `community_id`, `group_id?`, `source_workspace_ids?`, `owner_id?` | Создать проект |
 | `add_project_item` | `project_id`, `issue_id`, `status?` | Добавить issue в проект |
@@ -78,7 +79,7 @@ Community MCP Server авторизуется как **bot-участник** с
 | `create_invitation_link` | `community_id`, `role?`, `max_uses?`, `expires_at?` | Создать инвайт-ссылку |
 | `log_run` | `action`, `kind?`, `title?`, `summary?`, `tags?`, `issue_id?`, `request_id?`, `session_id?`, `usage?` | Журнал прогонов агента: `start` / `finish` / `link`, расход токенов и стоимость |
 
-Полный список (63 инструмента) — `tools/list`; он же источник истины при расхождении с таблицей.
+Полный список (65 инструментов) — `tools/list`; он же источник истины при расхождении с таблицей.
 
 ## Использование в Agent'ах
 
