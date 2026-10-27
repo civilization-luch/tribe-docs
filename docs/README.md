@@ -34,6 +34,7 @@
 
 - [Архитектура платформы](architecture/index.md)
 - [Архитектурный подход — Event Sourcing, DDD, CQRS, стек](architecture/approach.md)
+- [Полномочия и срок: мандаты](architecture/authority.md)
 - [Модель участников коллайвинга](coliving/members.md)
 - [Дома как группы](coliving/groups.md)
 
@@ -53,6 +54,7 @@
 
 ### Ядро
 - [Membership](modules/membership.md) — управление участниками, заявки, статусы
+- [Groups](modules/groups.md) — команды и временные группы: мандат, срок, архив
 - [Billing](modules/billing.md) — платежи, подписки, сплит
 - [Bookings](modules/bookings.md) — бронирование комнат и пространств
 - [Issues & Workspaces](modules/issues.md) — задачи, воркспейсы, milestones, доски, комментарии
