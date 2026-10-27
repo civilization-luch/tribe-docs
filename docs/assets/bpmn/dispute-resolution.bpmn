@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Dispute" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Dispute">
+      <bpmn:lane id="Lane_Parties" name="Стороны сделки">
+        <bpmn:flowNodeRef>Start_Dispute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Evidence</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Mutual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MutualCancel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Mutual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Open</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Panel" name="Первая линия поручителей">
+        <bpmn:flowNodeRef>Task_Panel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Conflict</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Vote</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Majority</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Execute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Resolved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Deadlock</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Lock</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Dispute" name="Спор открыт">
+      <bpmn:outgoing>Flow_D_Start_Open</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Open" name="Открыть спор и указать причину">
+      <bpmn:incoming>Flow_D_Start_Open</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Open_Evidence</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Evidence" name="Загрузить доказательства">
+      <bpmn:incoming>Flow_D_Open_Evidence</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Evidence_Panel</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Mutual" name="Стороны согласны на возврат?">
+      <bpmn:incoming>Flow_D_Lock_Mutual</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Mutual_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D_Mutual_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_MutualCancel" name="Подтвердить взаимный возврат">
+      <bpmn:incoming>Flow_D_Mutual_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Mutual_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Mutual" name="Покрытие освобождено">
+      <bpmn:incoming>Flow_D_Mutual_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Open" name="Deadlock: покрытие заблокировано">
+      <bpmn:incoming>Flow_D_Mutual_No</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Panel" name="Определить панель: поручители с блокировкой">
+      <bpmn:incoming>Flow_D_Evidence_Panel</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Panel_Conflict</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Conflict" name="Исключить заинтересованных">
+      <bpmn:incoming>Flow_D_Panel_Conflict</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Conflict_Vote</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Vote" name="Голосование 72 часа">
+      <bpmn:incoming>Flow_D_Conflict_Vote</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Vote_Majority</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Majority" name="Большинство за 72 ч?">
+      <bpmn:incoming>Flow_D_Vote_Majority</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Majority_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_D_Majority_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Decision" name="Зафиксировать решение">
+      <bpmn:incoming>Flow_D_Majority_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Decision_Execute</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Execute" name="Выплата или возврат по решению">
+      <bpmn:incoming>Flow_D_Decision_Execute</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Execute_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Resolved" name="Решение исполнено">
+      <bpmn:incoming>Flow_D_Execute_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Deadlock" name="Зафиксировать deadlock">
+      <bpmn:incoming>Flow_D_Majority_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Deadlock_Lock</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Lock" name="Покрытие остаётся заблокированным">
+      <bpmn:incoming>Flow_D_Deadlock_Lock</bpmn:incoming>
+      <bpmn:outgoing>Flow_D_Lock_Mutual</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_D_Start_Open" sourceRef="Start_Dispute" targetRef="Task_Open" />
+    <bpmn:sequenceFlow id="Flow_D_Open_Evidence" sourceRef="Task_Open" targetRef="Task_Evidence" />
+    <bpmn:sequenceFlow id="Flow_D_Evidence_Panel" sourceRef="Task_Evidence" targetRef="Task_Panel" />
+    <bpmn:sequenceFlow id="Flow_D_Panel_Conflict" sourceRef="Task_Panel" targetRef="Task_Conflict" />
+    <bpmn:sequenceFlow id="Flow_D_Conflict_Vote" sourceRef="Task_Conflict" targetRef="Task_Vote" />
+    <bpmn:sequenceFlow id="Flow_D_Vote_Majority" sourceRef="Task_Vote" targetRef="Gateway_Majority" />
+    <bpmn:sequenceFlow id="Flow_D_Majority_Yes" name="большинство" sourceRef="Gateway_Majority" targetRef="Task_Decision" />
+    <bpmn:sequenceFlow id="Flow_D_Decision_Execute" sourceRef="Task_Decision" targetRef="Task_Execute" />
+    <bpmn:sequenceFlow id="Flow_D_Execute_End" sourceRef="Task_Execute" targetRef="End_Resolved" />
+    <bpmn:sequenceFlow id="Flow_D_Majority_No" name="равенство" sourceRef="Gateway_Majority" targetRef="Task_Deadlock" />
+    <bpmn:sequenceFlow id="Flow_D_Deadlock_Lock" sourceRef="Task_Deadlock" targetRef="Task_Lock" />
+    <bpmn:sequenceFlow id="Flow_D_Lock_Mutual" sourceRef="Task_Lock" targetRef="Gateway_Mutual" />
+    <bpmn:sequenceFlow id="Flow_D_Mutual_Yes" name="да" sourceRef="Gateway_Mutual" targetRef="Task_MutualCancel" />
+    <bpmn:sequenceFlow id="Flow_D_Mutual_End" sourceRef="Task_MutualCancel" targetRef="End_Mutual" />
+    <bpmn:sequenceFlow id="Flow_D_Mutual_No" name="нет" sourceRef="Gateway_Mutual" targetRef="End_Open" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_Dispute">
+    <bpmn:participant id="Participant_Dispute" name="Спор первой линии" processRef="Process_Dispute" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Dispute">
+      <bpmndi:BPMNShape id="Participant_Dispute_di" bpmnElement="Participant_Dispute" isHorizontal="true">
+        <dc:Bounds x="160" y="50" width="1800" height="630" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Parties_di" bpmnElement="Lane_Parties" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1760" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Panel_di" bpmnElement="Lane_Panel" isHorizontal="true">
+        <dc:Bounds x="190" y="340" width="1760" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Dispute_di" bpmnElement="Start_Dispute">
+        <dc:Bounds x="220" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="182" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Open_di" bpmnElement="Task_Open">
+        <dc:Bounds x="300" y="120" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="145" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Evidence_di" bpmnElement="Task_Evidence">
+        <dc:Bounds x="460" y="120" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="465" y="145" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Mutual_di" bpmnElement="Gateway_Mutual">
+        <dc:Bounds x="1060" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1035" y="189" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MutualCancel_di" bpmnElement="Task_MutualCancel">
+        <dc:Bounds x="1140" y="120" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1145" y="145" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Mutual_di" bpmnElement="End_Mutual">
+        <dc:Bounds x="1320" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1300" y="182" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Open_di" bpmnElement="End_Open">
+        <dc:Bounds x="1320" y="240" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1300" y="280" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Panel_di" bpmnElement="Task_Panel">
+        <dc:Bounds x="620" y="380" width="180" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="625" y="405" width="170" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Conflict_di" bpmnElement="Task_Conflict">
+        <dc:Bounds x="840" y="380" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="845" y="405" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Vote_di" bpmnElement="Task_Vote">
+        <dc:Bounds x="1020" y="380" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="405" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Majority_di" bpmnElement="Gateway_Majority">
+        <dc:Bounds x="1200" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1175" y="449" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Decision_di" bpmnElement="Task_Decision">
+        <dc:Bounds x="1300" y="380" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1305" y="405" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Execute_di" bpmnElement="Task_Execute">
+        <dc:Bounds x="1480" y="380" width="160" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1485" y="405" width="150" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Resolved_di" bpmnElement="End_Resolved">
+        <dc:Bounds x="1680" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1660" y="442" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Deadlock_di" bpmnElement="Task_Deadlock">
+        <dc:Bounds x="1300" y="500" width="140" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1305" y="525" width="130" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Lock_di" bpmnElement="Task_Lock">
+        <dc:Bounds x="1480" y="500" width="180" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1485" y="525" width="170" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_D_Start_Open_di" bpmnElement="Flow_D_Start_Open">
+        <di:waypoint x="256" y="160" />
+        <di:waypoint x="300" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Open_Evidence_di" bpmnElement="Flow_D_Open_Evidence">
+        <di:waypoint x="420" y="160" />
+        <di:waypoint x="460" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Evidence_Panel_di" bpmnElement="Flow_D_Evidence_Panel">
+        <di:waypoint x="530" y="200" />
+        <di:waypoint x="530" y="290" />
+        <di:waypoint x="710" y="290" />
+        <di:waypoint x="710" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Panel_Conflict_di" bpmnElement="Flow_D_Panel_Conflict">
+        <di:waypoint x="800" y="420" />
+        <di:waypoint x="840" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Conflict_Vote_di" bpmnElement="Flow_D_Conflict_Vote">
+        <di:waypoint x="980" y="420" />
+        <di:waypoint x="1020" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Vote_Majority_di" bpmnElement="Flow_D_Vote_Majority">
+        <di:waypoint x="1160" y="420" />
+        <di:waypoint x="1200" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Majority_Yes_di" bpmnElement="Flow_D_Majority_Yes">
+        <di:waypoint x="1250" y="420" />
+        <di:waypoint x="1300" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1265" y="413" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Decision_Execute_di" bpmnElement="Flow_D_Decision_Execute">
+        <di:waypoint x="1440" y="420" />
+        <di:waypoint x="1480" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Execute_End_di" bpmnElement="Flow_D_Execute_End">
+        <di:waypoint x="1640" y="420" />
+        <di:waypoint x="1680" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Majority_No_di" bpmnElement="Flow_D_Majority_No">
+        <di:waypoint x="1225" y="445" />
+        <di:waypoint x="1225" y="472" />
+        <di:waypoint x="1370" y="472" />
+        <di:waypoint x="1370" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1288" y="465" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Deadlock_Lock_di" bpmnElement="Flow_D_Deadlock_Lock">
+        <di:waypoint x="1440" y="540" />
+        <di:waypoint x="1480" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Lock_Mutual_di" bpmnElement="Flow_D_Lock_Mutual">
+        <di:waypoint x="1660" y="540" />
+        <di:waypoint x="1665" y="540" />
+        <di:waypoint x="1665" y="342" />
+        <di:waypoint x="1085" y="342" />
+        <di:waypoint x="1085" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Mutual_Yes_di" bpmnElement="Flow_D_Mutual_Yes">
+        <di:waypoint x="1110" y="160" />
+        <di:waypoint x="1140" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1115" y="153" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Mutual_End_di" bpmnElement="Flow_D_Mutual_End">
+        <di:waypoint x="1280" y="160" />
+        <di:waypoint x="1320" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D_Mutual_No_di" bpmnElement="Flow_D_Mutual_No">
+        <di:waypoint x="1085" y="185" />
+        <di:waypoint x="1085" y="212" />
+        <di:waypoint x="1338" y="212" />
+        <di:waypoint x="1338" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1202" y="205" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

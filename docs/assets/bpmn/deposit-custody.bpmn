@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_DepositCustody" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_DepositCustody">
+      <bpmn:lane id="Lane_Depositor" name="Депозитор">
+        <bpmn:flowNodeRef>Start_Cycle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Offer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Sent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Deal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Request</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Guarantor" name="Поручитель">
+        <bpmn:flowNodeRef>Task_Accept</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cover</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Receipt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Dispute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Dispute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Confirm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Release</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Cycle</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Cycle" name="Участник хочет депозит">
+      <bpmn:outgoing>Flow_C_Start_Offer</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Offer" name="Отправить оффер">
+      <bpmn:incoming>Flow_C_Start_Offer</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Offer_Accept</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Sent" name="Отметить передачу">
+      <bpmn:incoming>Flow_C_Cover_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Sent_Receipt</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Deal" name="Депозит подтверждён">
+      <bpmn:incoming>Flow_C_Ok_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Deal_Request</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Request" name="Запросить возврат">
+      <bpmn:incoming>Flow_C_Deal_Request</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Request_Confirm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Accept" name="Принять, резерв 1:1">
+      <bpmn:incoming>Flow_C_Offer_Accept</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Accept_Cover</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Cover" name="Залог ≥ суммы?">
+      <bpmn:incoming>Flow_C_Accept_Cover</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Cover_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C_Cover_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Reject" name="Отклонить">
+      <bpmn:incoming>Flow_C_Cover_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Reject_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Reject" name="Конец">
+      <bpmn:incoming>Flow_C_Reject_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Receipt" name="Подтвердить получение">
+      <bpmn:incoming>Flow_C_Sent_Receipt</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Receipt_Ok</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Ok" name="Получено?">
+      <bpmn:incoming>Flow_C_Receipt_Ok</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Ok_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C_Ok_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Dispute" name="Спор / возврат">
+      <bpmn:incoming>Flow_C_Ok_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Dispute_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Dispute" name="Конец">
+      <bpmn:incoming>Flow_C_Dispute_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Confirm" name="Подтвердить возврат второй стороной">
+      <bpmn:incoming>Flow_C_Request_Confirm</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Confirm_Release</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Release" name="Освободить резерв">
+      <bpmn:incoming>Flow_C_Confirm_Release</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Release_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Cycle" name="Резерв свободен">
+      <bpmn:incoming>Flow_C_Release_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C_Start_Offer" sourceRef="Start_Cycle" targetRef="Task_Offer" />
+    <bpmn:sequenceFlow id="Flow_C_Offer_Accept" sourceRef="Task_Offer" targetRef="Task_Accept" />
+    <bpmn:sequenceFlow id="Flow_C_Accept_Cover" sourceRef="Task_Accept" targetRef="Gateway_Cover" />
+    <bpmn:sequenceFlow id="Flow_C_Cover_No" name="нет" sourceRef="Gateway_Cover" targetRef="Task_Reject" />
+    <bpmn:sequenceFlow id="Flow_C_Reject_End" sourceRef="Task_Reject" targetRef="End_Reject" />
+    <bpmn:sequenceFlow id="Flow_C_Cover_Yes" name="да" sourceRef="Gateway_Cover" targetRef="Task_Sent" />
+    <bpmn:sequenceFlow id="Flow_C_Sent_Receipt" sourceRef="Task_Sent" targetRef="Task_Receipt" />
+    <bpmn:sequenceFlow id="Flow_C_Receipt_Ok" sourceRef="Task_Receipt" targetRef="Gateway_Ok" />
+    <bpmn:sequenceFlow id="Flow_C_Ok_No" name="нет" sourceRef="Gateway_Ok" targetRef="Task_Dispute" />
+    <bpmn:sequenceFlow id="Flow_C_Dispute_End" sourceRef="Task_Dispute" targetRef="End_Dispute" />
+    <bpmn:sequenceFlow id="Flow_C_Ok_Yes" name="да" sourceRef="Gateway_Ok" targetRef="Task_Deal" />
+    <bpmn:sequenceFlow id="Flow_C_Deal_Request" sourceRef="Task_Deal" targetRef="Task_Request" />
+    <bpmn:sequenceFlow id="Flow_C_Request_Confirm" sourceRef="Task_Request" targetRef="Task_Confirm" />
+    <bpmn:sequenceFlow id="Flow_C_Confirm_Release" sourceRef="Task_Confirm" targetRef="Task_Release" />
+    <bpmn:sequenceFlow id="Flow_C_Release_End" sourceRef="Task_Release" targetRef="End_Cycle" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_DepositCustody">
+    <bpmn:participant id="Participant_DepositCustody" name="Передача депозита поручителю" processRef="Process_DepositCustody" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_DepositCustody">
+      <bpmndi:BPMNShape id="Participant_DepositCustody_di" bpmnElement="Participant_DepositCustody" isHorizontal="true">
+        <dc:Bounds x="160" y="50" width="1140" height="510" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Depositor_di" bpmnElement="Lane_Depositor" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1080" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Guarantor_di" bpmnElement="Lane_Guarantor" isHorizontal="true">
+        <dc:Bounds x="190" y="300" width="1080" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Cycle_di" bpmnElement="Start_Cycle">
+        <dc:Bounds x="220" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="182" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Offer_di" bpmnElement="Task_Offer">
+        <dc:Bounds x="300" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Sent_di" bpmnElement="Task_Sent">
+        <dc:Bounds x="460" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="465" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Deal_di" bpmnElement="Task_Deal">
+        <dc:Bounds x="620" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="625" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Request_di" bpmnElement="Task_Request">
+        <dc:Bounds x="780" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="785" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Accept_di" bpmnElement="Task_Accept">
+        <dc:Bounds x="300" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="365" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Cover_di" bpmnElement="Gateway_Cover">
+        <dc:Bounds x="460" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="435" y="409" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reject_di" bpmnElement="Task_Reject">
+        <dc:Bounds x="560" y="440" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="565" y="465" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Reject_di" bpmnElement="End_Reject">
+        <dc:Bounds x="700" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="680" y="502" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Receipt_di" bpmnElement="Task_Receipt">
+        <dc:Bounds x="560" y="340" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="565" y="365" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Ok_di" bpmnElement="Gateway_Ok">
+        <dc:Bounds x="720" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="695" y="409" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Dispute_di" bpmnElement="Task_Dispute">
+        <dc:Bounds x="820" y="440" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="825" y="465" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Dispute_di" bpmnElement="End_Dispute">
+        <dc:Bounds x="960" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="502" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Confirm_di" bpmnElement="Task_Confirm">
+        <dc:Bounds x="820" y="340" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="825" y="365" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Release_di" bpmnElement="Task_Release">
+        <dc:Bounds x="980" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="365" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Cycle_di" bpmnElement="End_Cycle">
+        <dc:Bounds x="1120" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1100" y="402" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C_Start_Offer_di" bpmnElement="Flow_C_Start_Offer">
+        <di:waypoint x="256" y="160" />
+        <di:waypoint x="300" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Offer_Accept_di" bpmnElement="Flow_C_Offer_Accept">
+        <di:waypoint x="350" y="200" />
+        <di:waypoint x="350" y="270" />
+        <di:waypoint x="350" y="270" />
+        <di:waypoint x="350" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Accept_Cover_di" bpmnElement="Flow_C_Accept_Cover">
+        <di:waypoint x="400" y="380" />
+        <di:waypoint x="460" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Cover_No_di" bpmnElement="Flow_C_Cover_No">
+        <di:waypoint x="485" y="405" />
+        <di:waypoint x="485" y="422" />
+        <di:waypoint x="610" y="422" />
+        <di:waypoint x="610" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="538" y="416" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Reject_End_di" bpmnElement="Flow_C_Reject_End">
+        <di:waypoint x="660" y="480" />
+        <di:waypoint x="700" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Cover_Yes_di" bpmnElement="Flow_C_Cover_Yes">
+        <di:waypoint x="485" y="355" />
+        <di:waypoint x="485" y="278" />
+        <di:waypoint x="510" y="278" />
+        <di:waypoint x="510" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="488" y="270" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Sent_Receipt_di" bpmnElement="Flow_C_Sent_Receipt">
+        <di:waypoint x="510" y="200" />
+        <di:waypoint x="510" y="270" />
+        <di:waypoint x="620" y="270" />
+        <di:waypoint x="620" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Receipt_Ok_di" bpmnElement="Flow_C_Receipt_Ok">
+        <di:waypoint x="680" y="380" />
+        <di:waypoint x="720" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Ok_No_di" bpmnElement="Flow_C_Ok_No">
+        <di:waypoint x="745" y="405" />
+        <di:waypoint x="745" y="422" />
+        <di:waypoint x="870" y="422" />
+        <di:waypoint x="870" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="798" y="416" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Dispute_End_di" bpmnElement="Flow_C_Dispute_End">
+        <di:waypoint x="920" y="480" />
+        <di:waypoint x="960" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Ok_Yes_di" bpmnElement="Flow_C_Ok_Yes">
+        <di:waypoint x="745" y="355" />
+        <di:waypoint x="745" y="278" />
+        <di:waypoint x="670" y="278" />
+        <di:waypoint x="670" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="698" y="270" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Deal_Request_di" bpmnElement="Flow_C_Deal_Request">
+        <di:waypoint x="720" y="160" />
+        <di:waypoint x="780" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Request_Confirm_di" bpmnElement="Flow_C_Request_Confirm">
+        <di:waypoint x="830" y="200" />
+        <di:waypoint x="830" y="270" />
+        <di:waypoint x="880" y="270" />
+        <di:waypoint x="880" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Confirm_Release_di" bpmnElement="Flow_C_Confirm_Release">
+        <di:waypoint x="940" y="380" />
+        <di:waypoint x="980" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Release_End_di" bpmnElement="Flow_C_Release_End">
+        <di:waypoint x="1080" y="380" />
+        <di:waypoint x="1120" y="380" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

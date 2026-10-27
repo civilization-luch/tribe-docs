@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Campaign" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Campaign">
+      <bpmn:lane id="Lane_Team" name="Команда пилота">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Publish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Apply</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Fit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Metrics</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_GoNoGo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Scale</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Stop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Scale</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Stop</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Curator" name="Куратор">
+        <bpmn:flowNodeRef>Task_Call</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Commit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Later</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Later</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Onboard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_OnboardSplit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AssignBuddy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_First</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Remind</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Exit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Exit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Rhythm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Week4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Interview</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Participant" name="Участник">
+        <bpmn:flowNodeRef>Gateway_Role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Deposit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Profile</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_Cycle1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_CycleN</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Feedback</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Buddy" name="Бадди">
+        <bpmn:flowNodeRef>Task_Support</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Debrief</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Старт кампании">
+      <bpmn:outgoing>Flow_Start_Publish</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Publish" name="Опубликовать набор">
+      <bpmn:incoming>Flow_Start_Publish</bpmn:incoming>
+      <bpmn:outgoing>Flow_Publish_Apply</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Apply" name="Собрать заявки">
+      <bpmn:incoming>Flow_Publish_Apply</bpmn:incoming>
+      <bpmn:outgoing>Flow_Apply_Fit</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Fit" name="Заявка подходит?">
+      <bpmn:incoming>Flow_Apply_Fit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fit_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fit_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Wait" name="Отказ / лист ожидания">
+      <bpmn:incoming>Flow_Fit_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Wait_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Wait" name="Конец">
+      <bpmn:incoming>Flow_Wait_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Metrics" name="Срез метрик">
+      <bpmn:incoming>Flow_Interview_Metrics</bpmn:incoming>
+      <bpmn:outgoing>Flow_Metrics_GoNoGo</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_GoNoGo" name="Go / no-go?">
+      <bpmn:incoming>Flow_Metrics_GoNoGo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Go_Scale</bpmn:outgoing>
+      <bpmn:outgoing>Flow_No_Stop</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Scale" name="Масштабировать">
+      <bpmn:incoming>Flow_Go_Scale</bpmn:incoming>
+      <bpmn:outgoing>Flow_Scale_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Stop" name="Остановить">
+      <bpmn:incoming>Flow_No_Stop</bpmn:incoming>
+      <bpmn:outgoing>Flow_Stop_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Scale" name="Конец">
+      <bpmn:incoming>Flow_Scale_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Stop" name="Конец">
+      <bpmn:incoming>Flow_Stop_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Call" name="Созвон 15 минут">
+      <bpmn:incoming>Flow_Fit_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Call_Commit</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Commit" name="Готов на 4 недели?">
+      <bpmn:incoming>Flow_Call_Commit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Commit_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Commit_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Later" name="Отложить">
+      <bpmn:incoming>Flow_Commit_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Later_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Later" name="Конец">
+      <bpmn:incoming>Flow_Later_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Onboard" name="Онбординг: Telegram, POINT, роль">
+      <bpmn:incoming>Flow_Commit_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Onboard_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="Gateway_OnboardSplit" name="">
+      <bpmn:incoming>Flow_Onboard_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_Split_Role</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Split_Buddy</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_AssignBuddy" name="Назначить бадди">
+      <bpmn:incoming>Flow_Split_Buddy</bpmn:incoming>
+      <bpmn:outgoing>Flow_Buddy_Support</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_First" name="Первый цикл за 48 ч?">
+      <bpmn:incoming>Flow_Debrief_First</bpmn:incoming>
+      <bpmn:incoming>Flow_Retry_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_First_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_First_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Remind" name="Персональное напоминание">
+      <bpmn:incoming>Flow_First_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Remind_Retry</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Retry" name="Получилось?">
+      <bpmn:incoming>Flow_Remind_Retry</bpmn:incoming>
+      <bpmn:outgoing>Flow_Retry_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Retry_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Exit" name="Разбор причин / выход">
+      <bpmn:incoming>Flow_Retry_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Exit_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Exit" name="Конец">
+      <bpmn:incoming>Flow_Exit_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Task_Rhythm" name="Ритм недели">
+      <bpmn:incoming>Flow_First_Yes</bpmn:incoming>
+      <bpmn:incoming>Flow_Week4_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rhythm_CycleN</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Gateway_Week4" name="Неделя 4?">
+      <bpmn:incoming>Flow_CycleN_Week4</bpmn:incoming>
+      <bpmn:outgoing>Flow_Week4_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Week4_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Interview" name="Интервью и выпуск">
+      <bpmn:incoming>Flow_Feedback_Interview</bpmn:incoming>
+      <bpmn:outgoing>Flow_Interview_Metrics</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Role" name="Роль?">
+      <bpmn:incoming>Flow_Split_Role</bpmn:incoming>
+      <bpmn:outgoing>Flow_Role_Deposit</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Role_Profile</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Deposit" name="Создать депозит / план">
+      <bpmn:incoming>Flow_Role_Deposit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Deposit_Cycle1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Profile" name="Профиль и лимиты">
+      <bpmn:incoming>Flow_Role_Profile</bpmn:incoming>
+      <bpmn:outgoing>Flow_Profile_Cycle1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="Sub_Cycle1" name="Первый цикл">
+      <bpmn:incoming>Flow_Support_Cycle1</bpmn:incoming>
+      <bpmn:incoming>Flow_Deposit_Cycle1</bpmn:incoming>
+      <bpmn:incoming>Flow_Profile_Cycle1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cycle1_Debrief</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Sub_CycleN" name="Циклы недели">
+      <bpmn:incoming>Flow_Rhythm_CycleN</bpmn:incoming>
+      <bpmn:outgoing>Flow_CycleN_Week4</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:userTask id="Task_Feedback" name="Обратная связь">
+      <bpmn:incoming>Flow_Week4_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Feedback_Interview</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Support" name="Провести первый цикл вместе">
+      <bpmn:incoming>Flow_Buddy_Support</bpmn:incoming>
+      <bpmn:outgoing>Flow_Support_Cycle1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Debrief" name="Разобрать итоги">
+      <bpmn:incoming>Flow_Cycle1_Debrief</bpmn:incoming>
+      <bpmn:outgoing>Flow_Debrief_First</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_Start_Publish" sourceRef="StartEvent_1" targetRef="Task_Publish" />
+    <bpmn:sequenceFlow id="Flow_Publish_Apply" sourceRef="Task_Publish" targetRef="Task_Apply" />
+    <bpmn:sequenceFlow id="Flow_Apply_Fit" sourceRef="Task_Apply" targetRef="Gateway_Fit" />
+    <bpmn:sequenceFlow id="Flow_Fit_No" name="нет" sourceRef="Gateway_Fit" targetRef="Task_Wait" />
+    <bpmn:sequenceFlow id="Flow_Wait_End" sourceRef="Task_Wait" targetRef="End_Wait" />
+    <bpmn:sequenceFlow id="Flow_Fit_Yes" name="да" sourceRef="Gateway_Fit" targetRef="Task_Call" />
+    <bpmn:sequenceFlow id="Flow_Call_Commit" sourceRef="Task_Call" targetRef="Gateway_Commit" />
+    <bpmn:sequenceFlow id="Flow_Commit_No" name="нет" sourceRef="Gateway_Commit" targetRef="Task_Later" />
+    <bpmn:sequenceFlow id="Flow_Later_End" sourceRef="Task_Later" targetRef="End_Later" />
+    <bpmn:sequenceFlow id="Flow_Commit_Yes" name="да" sourceRef="Gateway_Commit" targetRef="Task_Onboard" />
+    <bpmn:sequenceFlow id="Flow_Onboard_Split" sourceRef="Task_Onboard" targetRef="Gateway_OnboardSplit" />
+    <bpmn:sequenceFlow id="Flow_Split_Role" sourceRef="Gateway_OnboardSplit" targetRef="Gateway_Role" />
+    <bpmn:sequenceFlow id="Flow_Split_Buddy" sourceRef="Gateway_OnboardSplit" targetRef="Task_AssignBuddy" />
+    <bpmn:sequenceFlow id="Flow_Buddy_Support" sourceRef="Task_AssignBuddy" targetRef="Task_Support" />
+    <bpmn:sequenceFlow id="Flow_Support_Cycle1" sourceRef="Task_Support" targetRef="Sub_Cycle1" />
+    <bpmn:sequenceFlow id="Flow_Cycle1_Debrief" sourceRef="Sub_Cycle1" targetRef="Task_Debrief" />
+    <bpmn:sequenceFlow id="Flow_Debrief_First" sourceRef="Task_Debrief" targetRef="Gateway_First" />
+    <bpmn:sequenceFlow id="Flow_First_No" name="нет" sourceRef="Gateway_First" targetRef="Task_Remind" />
+    <bpmn:sequenceFlow id="Flow_Remind_Retry" sourceRef="Task_Remind" targetRef="Gateway_Retry" />
+    <bpmn:sequenceFlow id="Flow_Retry_Yes" name="да" sourceRef="Gateway_Retry" targetRef="Gateway_First" />
+    <bpmn:sequenceFlow id="Flow_Retry_No" name="нет" sourceRef="Gateway_Retry" targetRef="Task_Exit" />
+    <bpmn:sequenceFlow id="Flow_Exit_End" sourceRef="Task_Exit" targetRef="End_Exit" />
+    <bpmn:sequenceFlow id="Flow_First_Yes" name="да" sourceRef="Gateway_First" targetRef="Task_Rhythm" />
+    <bpmn:sequenceFlow id="Flow_Rhythm_CycleN" sourceRef="Task_Rhythm" targetRef="Sub_CycleN" />
+    <bpmn:sequenceFlow id="Flow_CycleN_Week4" sourceRef="Sub_CycleN" targetRef="Gateway_Week4" />
+    <bpmn:sequenceFlow id="Flow_Week4_No" name="нет" sourceRef="Gateway_Week4" targetRef="Task_Rhythm" />
+    <bpmn:sequenceFlow id="Flow_Week4_Yes" name="да" sourceRef="Gateway_Week4" targetRef="Task_Feedback" />
+    <bpmn:sequenceFlow id="Flow_Feedback_Interview" sourceRef="Task_Feedback" targetRef="Task_Interview" />
+    <bpmn:sequenceFlow id="Flow_Interview_Metrics" sourceRef="Task_Interview" targetRef="Task_Metrics" />
+    <bpmn:sequenceFlow id="Flow_Metrics_GoNoGo" sourceRef="Task_Metrics" targetRef="Gateway_GoNoGo" />
+    <bpmn:sequenceFlow id="Flow_Go_Scale" name="да" sourceRef="Gateway_GoNoGo" targetRef="Task_Scale" />
+    <bpmn:sequenceFlow id="Flow_No_Stop" name="нет" sourceRef="Gateway_GoNoGo" targetRef="Task_Stop" />
+    <bpmn:sequenceFlow id="Flow_Scale_End" sourceRef="Task_Scale" targetRef="End_Scale" />
+    <bpmn:sequenceFlow id="Flow_Stop_End" sourceRef="Task_Stop" targetRef="End_Stop" />
+    <bpmn:sequenceFlow id="Flow_Role_Deposit" name="депозитор" sourceRef="Gateway_Role" targetRef="Task_Deposit" />
+    <bpmn:sequenceFlow id="Flow_Role_Profile" name="поручитель" sourceRef="Gateway_Role" targetRef="Task_Profile" />
+    <bpmn:sequenceFlow id="Flow_Deposit_Cycle1" sourceRef="Task_Deposit" targetRef="Sub_Cycle1" />
+    <bpmn:sequenceFlow id="Flow_Profile_Cycle1" sourceRef="Task_Profile" targetRef="Sub_Cycle1" />
+    <bpmn:textAnnotation id="TextAnnotation_Dispute">
+      <bpmn:text>Спор: первая линия поручителей. 72 ч, большинство; при равенстве — deadlock. Оператор не решает.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Dispute" sourceRef="TextAnnotation_Dispute" targetRef="Sub_CycleN" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_Campaign">
+    <bpmn:participant id="Participant_Campaign" name="Пилотная кампания" processRef="Process_Campaign" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Campaign">
+      <bpmndi:BPMNShape id="Participant_Campaign_di" bpmnElement="Participant_Campaign" isHorizontal="true">
+        <dc:Bounds x="160" y="50" width="2320" height="990" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Team_di" bpmnElement="Lane_Team" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2260" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Curator_di" bpmnElement="Lane_Curator" isHorizontal="true">
+        <dc:Bounds x="190" y="320" width="2260" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Participant_di" bpmnElement="Lane_Participant" isHorizontal="true">
+        <dc:Bounds x="190" y="560" width="2260" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Buddy_di" bpmnElement="Lane_Buddy" isHorizontal="true">
+        <dc:Bounds x="190" y="800" width="2260" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="220" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="182" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publish_di" bpmnElement="Task_Publish">
+        <dc:Bounds x="300" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Apply_di" bpmnElement="Task_Apply">
+        <dc:Bounds x="440" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Fit_di" bpmnElement="Gateway_Fit">
+        <dc:Bounds x="580" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="555" y="189" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Wait_di" bpmnElement="Task_Wait">
+        <dc:Bounds x="680" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="685" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Wait_di" bpmnElement="End_Wait">
+        <dc:Bounds x="820" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="800" y="182" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Metrics_di" bpmnElement="Task_Metrics">
+        <dc:Bounds x="2020" y="120" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2025" y="145" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_GoNoGo_di" bpmnElement="Gateway_GoNoGo">
+        <dc:Bounds x="2160" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2135" y="189" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Scale_di" bpmnElement="Task_Scale">
+        <dc:Bounds x="2260" y="90" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2265" y="115" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Stop_di" bpmnElement="Task_Stop">
+        <dc:Bounds x="2260" y="190" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2265" y="215" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Scale_di" bpmnElement="End_Scale">
+        <dc:Bounds x="2400" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2380" y="152" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Stop_di" bpmnElement="End_Stop">
+        <dc:Bounds x="2400" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2380" y="252" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Call_di" bpmnElement="Task_Call">
+        <dc:Bounds x="360" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="365" y="385" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Commit_di" bpmnElement="Gateway_Commit">
+        <dc:Bounds x="500" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="475" y="429" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Later_di" bpmnElement="Task_Later">
+        <dc:Bounds x="620" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="625" y="385" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Later_di" bpmnElement="End_Later">
+        <dc:Bounds x="760" y="470" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="740" y="510" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Onboard_di" bpmnElement="Task_Onboard">
+        <dc:Bounds x="760" y="360" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="765" y="385" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_OnboardSplit_di" bpmnElement="Gateway_OnboardSplit">
+        <dc:Bounds x="920" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="895" y="429" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AssignBuddy_di" bpmnElement="Task_AssignBuddy">
+        <dc:Bounds x="1000" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1005" y="385" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_First_di" bpmnElement="Gateway_First">
+        <dc:Bounds x="1120" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1095" y="429" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Remind_di" bpmnElement="Task_Remind">
+        <dc:Bounds x="1220" y="360" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1225" y="385" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Retry_di" bpmnElement="Gateway_Retry">
+        <dc:Bounds x="1380" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1355" y="429" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Exit_di" bpmnElement="Task_Exit">
+        <dc:Bounds x="1480" y="360" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1485" y="385" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Exit_di" bpmnElement="End_Exit">
+        <dc:Bounds x="1620" y="470" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1600" y="510" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Rhythm_di" bpmnElement="Task_Rhythm" isExpanded="false">
+        <dc:Bounds x="1640" y="360" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1645" y="385" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Week4_di" bpmnElement="Gateway_Week4">
+        <dc:Bounds x="1800" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1775" y="429" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Interview_di" bpmnElement="Task_Interview">
+        <dc:Bounds x="1900" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1905" y="385" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Role_di" bpmnElement="Gateway_Role">
+        <dc:Bounds x="920" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="895" y="669" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Deposit_di" bpmnElement="Task_Deposit">
+        <dc:Bounds x="1020" y="600" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="625" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Profile_di" bpmnElement="Task_Profile">
+        <dc:Bounds x="1020" y="700" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="725" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_Cycle1_di" bpmnElement="Sub_Cycle1" isExpanded="false">
+        <dc:Bounds x="1160" y="600" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="625" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_CycleN_di" bpmnElement="Sub_CycleN" isExpanded="false">
+        <dc:Bounds x="1320" y="600" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1325" y="625" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Feedback_di" bpmnElement="Task_Feedback">
+        <dc:Bounds x="1480" y="600" width="100" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1485" y="625" width="90" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Support_di" bpmnElement="Task_Support">
+        <dc:Bounds x="1160" y="840" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="865" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Debrief_di" bpmnElement="Task_Debrief">
+        <dc:Bounds x="1320" y="840" width="120" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1325" y="865" width="110" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_Dispute_di" bpmnElement="TextAnnotation_Dispute">
+        <dc:Bounds x="1320" y="700" width="360" height="80" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1325" y="705" width="350" height="70" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_Publish_di" bpmnElement="Flow_Start_Publish">
+        <di:waypoint x="256" y="160" />
+        <di:waypoint x="300" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Publish_Apply_di" bpmnElement="Flow_Publish_Apply">
+        <di:waypoint x="400" y="160" />
+        <di:waypoint x="440" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Apply_Fit_di" bpmnElement="Flow_Apply_Fit">
+        <di:waypoint x="540" y="160" />
+        <di:waypoint x="580" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fit_No_di" bpmnElement="Flow_Fit_No">
+        <di:waypoint x="630" y="160" />
+        <di:waypoint x="680" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="153" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Wait_End_di" bpmnElement="Flow_Wait_End">
+        <di:waypoint x="780" y="160" />
+        <di:waypoint x="820" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fit_Yes_di" bpmnElement="Flow_Fit_Yes">
+        <di:waypoint x="605" y="185" />
+        <di:waypoint x="605" y="272" />
+        <di:waypoint x="410" y="272" />
+        <di:waypoint x="410" y="360" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="498" y="266" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Call_Commit_di" bpmnElement="Flow_Call_Commit">
+        <di:waypoint x="460" y="400" />
+        <di:waypoint x="500" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Commit_No_di" bpmnElement="Flow_Commit_No">
+        <di:waypoint x="550" y="400" />
+        <di:waypoint x="620" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="575" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Later_End_di" bpmnElement="Flow_Later_End">
+        <di:waypoint x="670" y="440" />
+        <di:waypoint x="670" y="455" />
+        <di:waypoint x="778" y="455" />
+        <di:waypoint x="778" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Commit_Yes_di" bpmnElement="Flow_Commit_Yes">
+        <di:waypoint x="525" y="425" />
+        <di:waypoint x="525" y="460" />
+        <di:waypoint x="780" y="460" />
+        <di:waypoint x="780" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="642" y="439" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Onboard_Split_di" bpmnElement="Flow_Onboard_Split">
+        <di:waypoint x="880" y="400" />
+        <di:waypoint x="920" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Split_Role_di" bpmnElement="Flow_Split_Role">
+        <di:waypoint x="945" y="425" />
+        <di:waypoint x="945" y="520" />
+        <di:waypoint x="945" y="520" />
+        <di:waypoint x="945" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Split_Buddy_di" bpmnElement="Flow_Split_Buddy">
+        <di:waypoint x="970" y="400" />
+        <di:waypoint x="1000" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Buddy_Support_di" bpmnElement="Flow_Buddy_Support">
+        <di:waypoint x="1050" y="440" />
+        <di:waypoint x="1050" y="560" />
+        <di:waypoint x="1140" y="560" />
+        <di:waypoint x="1140" y="880" />
+        <di:waypoint x="1160" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Support_Cycle1_di" bpmnElement="Flow_Support_Cycle1">
+        <di:waypoint x="1220" y="840" />
+        <di:waypoint x="1220" y="760" />
+        <di:waypoint x="1220" y="760" />
+        <di:waypoint x="1220" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cycle1_Debrief_di" bpmnElement="Flow_Cycle1_Debrief">
+        <di:waypoint x="1220" y="680" />
+        <di:waypoint x="1220" y="760" />
+        <di:waypoint x="1380" y="760" />
+        <di:waypoint x="1380" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Debrief_First_di" bpmnElement="Flow_Debrief_First">
+        <di:waypoint x="1440" y="880" />
+        <di:waypoint x="1460" y="880" />
+        <di:waypoint x="1460" y="560" />
+        <di:waypoint x="1145" y="560" />
+        <di:waypoint x="1145" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_First_No_di" bpmnElement="Flow_First_No">
+        <di:waypoint x="1170" y="400" />
+        <di:waypoint x="1220" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1185" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Remind_Retry_di" bpmnElement="Flow_Remind_Retry">
+        <di:waypoint x="1340" y="400" />
+        <di:waypoint x="1380" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_Yes_di" bpmnElement="Flow_Retry_Yes">
+        <di:waypoint x="1380" y="400" />
+        <di:waypoint x="1170" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1265" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_No_di" bpmnElement="Flow_Retry_No">
+        <di:waypoint x="1430" y="400" />
+        <di:waypoint x="1480" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1445" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Exit_End_di" bpmnElement="Flow_Exit_End">
+        <di:waypoint x="1540" y="440" />
+        <di:waypoint x="1540" y="455" />
+        <di:waypoint x="1638" y="455" />
+        <di:waypoint x="1638" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_First_Yes_di" bpmnElement="Flow_First_Yes">
+        <di:waypoint x="1170" y="400" />
+        <di:waypoint x="1640" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1395" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Rhythm_CycleN_di" bpmnElement="Flow_Rhythm_CycleN">
+        <di:waypoint x="1700" y="440" />
+        <di:waypoint x="1700" y="560" />
+        <di:waypoint x="1460" y="560" />
+        <di:waypoint x="1460" y="640" />
+        <di:waypoint x="1440" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CycleN_Week4_di" bpmnElement="Flow_CycleN_Week4">
+        <di:waypoint x="1440" y="640" />
+        <di:waypoint x="1460" y="640" />
+        <di:waypoint x="1460" y="540" />
+        <di:waypoint x="1825" y="540" />
+        <di:waypoint x="1825" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Week4_No_di" bpmnElement="Flow_Week4_No">
+        <di:waypoint x="1800" y="400" />
+        <di:waypoint x="1760" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1770" y="393" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Week4_Yes_di" bpmnElement="Flow_Week4_Yes">
+        <di:waypoint x="1825" y="425" />
+        <di:waypoint x="1825" y="580" />
+        <di:waypoint x="1530" y="580" />
+        <di:waypoint x="1530" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1668" y="539" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Feedback_Interview_di" bpmnElement="Flow_Feedback_Interview">
+        <di:waypoint x="1530" y="600" />
+        <di:waypoint x="1530" y="550" />
+        <di:waypoint x="1910" y="550" />
+        <di:waypoint x="1910" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Interview_Metrics_di" bpmnElement="Flow_Interview_Metrics">
+        <di:waypoint x="1950" y="360" />
+        <di:waypoint x="1950" y="320" />
+        <di:waypoint x="2070" y="320" />
+        <di:waypoint x="2070" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Metrics_GoNoGo_di" bpmnElement="Flow_Metrics_GoNoGo">
+        <di:waypoint x="2120" y="160" />
+        <di:waypoint x="2160" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Go_Scale_di" bpmnElement="Flow_Go_Scale">
+        <di:waypoint x="2185" y="135" />
+        <di:waypoint x="2185" y="152" />
+        <di:waypoint x="2310" y="152" />
+        <di:waypoint x="2310" y="170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2238" y="146" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_No_Stop_di" bpmnElement="Flow_No_Stop">
+        <di:waypoint x="2185" y="185" />
+        <di:waypoint x="2185" y="188" />
+        <di:waypoint x="2310" y="188" />
+        <di:waypoint x="2310" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2238" y="180" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Scale_End_di" bpmnElement="Flow_Scale_End">
+        <di:waypoint x="2360" y="130" />
+        <di:waypoint x="2400" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Stop_End_di" bpmnElement="Flow_Stop_End">
+        <di:waypoint x="2360" y="230" />
+        <di:waypoint x="2400" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Role_Deposit_di" bpmnElement="Flow_Role_Deposit">
+        <di:waypoint x="970" y="640" />
+        <di:waypoint x="1020" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="633" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Role_Profile_di" bpmnElement="Flow_Role_Profile">
+        <di:waypoint x="945" y="665" />
+        <di:waypoint x="945" y="682" />
+        <di:waypoint x="1070" y="682" />
+        <di:waypoint x="1070" y="700" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="998" y="676" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Deposit_Cycle1_di" bpmnElement="Flow_Deposit_Cycle1">
+        <di:waypoint x="1120" y="640" />
+        <di:waypoint x="1160" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Profile_Cycle1_di" bpmnElement="Flow_Profile_Cycle1">
+        <di:waypoint x="1070" y="700" />
+        <di:waypoint x="1070" y="690" />
+        <di:waypoint x="1220" y="690" />
+        <di:waypoint x="1220" y="680" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
