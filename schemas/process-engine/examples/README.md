@@ -33,9 +33,22 @@
 | Переменная | Источник |
 |---|---|
 | `collected` | сумма поданных заявок |
-| `purchase.min_total` | агрегат `Purchase` |
-| `purchase.join_deadline` | агрегат `Purchase` |
+| `min_total` | `purchase.min_total` |
+| `max_total` | `purchase.max_total` |
+| `max_per_member` | `purchase.max_per_member` |
+| `join_deadline` | `purchase.join_deadline` |
 | `delivery_covered` | покрытие поставки при `advance_percent > 0` |
+
+## Модель процесса
+
+| Блок | Значение |
+|---|---|
+| `passport.owner` | `organizer` |
+| `roles` | `organizer` (human), `member` (human), `system` (system) |
+| `rules` | `br_min_collection` — детерминированное, версия 2026-10-01 |
+| `data` | `collected`, `min_total`, `max_total`, `max_per_member`, `join_deadline`, `delivery_covered` |
+| `agent.deny` | `guarantee_launch_purchase`, `guarantee_cancel_purchase` |
+| `tests` | 4 декларативных сценария |
 
 ## Расхождения с текущей реализацией
 
