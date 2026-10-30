@@ -71,7 +71,17 @@
         "performedBy": "human",
         "approvalRequired": true
       },
-      "reminderHours": 24
+      "reminderHours": 24,
+      "decisions": [
+        {
+          "id": "approve",
+          "label": "Одобрить"
+        },
+        {
+          "id": "reject",
+          "label": "Отклонить"
+        }
+      ]
     },
     "approved": {
       "type": "end_event",

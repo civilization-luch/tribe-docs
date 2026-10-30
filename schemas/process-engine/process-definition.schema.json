@@ -344,6 +344,13 @@
         "assignedRole": {
           "$ref": "#/$defs/id"
         },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decision"
+          },
+          "description": "Варианты решения задачи; показываются как кнопки"
+        },
         "slaHours": {
           "type": "number",
           "exclusiveMinimum": 0
@@ -751,6 +758,22 @@
         "contextUrl": {
           "type": "string",
           "description": "Шаблон ссылки на объект процесса: {community} — slug сообщества, {id} — id объекта, {поле} — атрибут объекта"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
         }
       }
     }

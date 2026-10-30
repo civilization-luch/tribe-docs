@@ -2,7 +2,7 @@
   "schemaVersion": "0.2",
   "id": "support.triage",
   "name": "Разбор обращения",
-  "description": "Первичный разбор обращения в поддержку: принять в работу или отклонить. Дальнейшая работа с обращением ведётся в домене.",
+  "description": "Разбор обращения и работа по нему: принять, отклонить или решить. Остальные переходы статусов выполняются в домене.",
   "version": "2026-10-30.3",
   "contextType": "support_request",
   "host": {
@@ -14,11 +14,12 @@
   },
   "passport": {
     "owner": "support_agent",
-    "goal": "Разобрать новое обращение: принять в работу или отклонить",
+    "goal": "Разобрать обращение и довести до решения",
     "startsWhen": "обращение создано",
-    "endsWhen": "обращение принято в работу или отклонено",
+    "endsWhen": "обращение решено или отклонено",
     "inScope": [
-      "первичный разбор обращения"
+      "разбор обращения",
+      "работа по обращению"
     ],
     "outOfScope": [
       "переписка с заявителем",
@@ -55,24 +56,53 @@
     "triage": {
       "type": "user_task",
       "name": "Разбор обращения",
-      "description": "Принять обращение в работу или отклонить",
+      "description": "Принять в работу или отклонить",
       "assignedRole": "support_agent",
       "slaHours": 8,
       "reminderHours": 4,
+      "decisions": [
+        {
+          "id": "accept",
+          "label": "Принять"
+        },
+        {
+          "id": "decline",
+          "label": "Отклонить"
+        }
+      ],
       "workDistribution": {
         "performedBy": "human"
       }
     },
-    "triaged": {
+    "working": {
+      "type": "user_task",
+      "name": "Работа по обращению",
+      "description": "Решить обращение или отклонить",
+      "assignedRole": "support_agent",
+      "slaHours": 24,
+      "reminderHours": 12,
+      "decisions": [
+        {
+          "id": "resolve",
+          "label": "Решено"
+        },
+        {
+          "id": "decline",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "resolved": {
       "type": "end_event",
-      "name": "Принято",
-      "description": "Обращение принято в работу",
+      "name": "Решено",
       "final": true
     },
     "declined": {
       "type": "end_event",
       "name": "Отклонено",
-      "description": "Обращение отклонено без работы",
       "final": true
     }
   },
@@ -94,14 +124,14 @@
     {
       "id": "tr_accept",
       "from": "triage",
-      "to": "triaged",
+      "to": "working",
       "on": {
         "decision": "accept"
       },
       "action": "support_change_status",
       "args": {
         "request_id": "${context_id}",
-        "status": "triaged",
+        "status": "accepted",
         "via_process": true
       },
       "journal": [
@@ -109,11 +139,10 @@
         "actor",
         "decision",
         "action"
-      ],
-      "description": "Принять обращение в работу"
+      ]
     },
     {
-      "id": "tr_decline",
+      "id": "tr_triage_decline",
       "from": "triage",
       "to": "declined",
       "on": {
@@ -130,15 +159,54 @@
         "actor",
         "decision",
         "action"
-      ],
-      "description": "Отклонить обращение"
+      ]
+    },
+    {
+      "id": "tr_resolve",
+      "from": "working",
+      "to": "resolved",
+      "on": {
+        "decision": "resolve"
+      },
+      "action": "support_change_status",
+      "args": {
+        "request_id": "${context_id}",
+        "status": "resolved",
+        "via_process": true
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_work_decline",
+      "from": "working",
+      "to": "declined",
+      "on": {
+        "decision": "decline"
+      },
+      "action": "support_change_status",
+      "args": {
+        "request_id": "${context_id}",
+        "status": "declined",
+        "via_process": true
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
     }
   ],
   "timers": [],
   "tests": [
     {
       "id": "t_accept",
-      "description": "Принятие переводит обращение в triaged",
+      "description": "Принятие переводит обращение в работу",
       "given": {},
       "when": [
         {
@@ -150,17 +218,43 @@
         },
         {
           "decision": "accept",
-          "actor": "admin-1"
+          "actor": "agent-1"
         }
       ],
       "then": {
-        "state": "triaged",
+        "state": "working",
+        "status": "awaiting_user"
+      }
+    },
+    {
+      "id": "t_resolve",
+      "description": "Решение закрывает обращение",
+      "given": {},
+      "when": [
+        {
+          "event": "SupportRequestCreated",
+          "aggregate_id": "request-1",
+          "payload": {
+            "title": "Не работает вход"
+          }
+        },
+        {
+          "decision": "accept",
+          "actor": "agent-1"
+        },
+        {
+          "decision": "resolve",
+          "actor": "agent-1"
+        }
+      ],
+      "then": {
+        "state": "resolved",
         "status": "completed"
       }
     },
     {
       "id": "t_decline",
-      "description": "Отклонение переводит обращение в declined",
+      "description": "Отклонение на разборе завершает процесс",
       "given": {},
       "when": [
         {
@@ -172,7 +266,7 @@
         },
         {
           "decision": "decline",
-          "actor": "admin-1"
+          "actor": "agent-1"
         }
       ],
       "then": {
