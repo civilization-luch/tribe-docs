@@ -1,0 +1,262 @@
+{
+  "schemaVersion": "0.3",
+  "id": "wallet.deposit",
+  "name": "Пополнение через бухгалтера",
+  "description": "Заявка на пополнение кошелька или казны: заявитель прикладывает подтверждение перевода, бухгалтер подтверждает поступление или отклоняет.",
+  "version": "2026-10-30",
+  "contextType": "wallet_deposit_claim",
+  "host": {
+    "module": "wallet",
+    "stateMap": {
+      "pending": "review"
+    },
+    "contextUrl": "/community/{community}/treasury"
+  },
+  "passport": {
+    "owner": "accountant",
+    "goal": "Подтвердить поступление денег по заявке на пополнение",
+    "startsWhen": "заявка на пополнение создана",
+    "endsWhen": "поступление подтверждено или заявка отклонена",
+    "inScope": [
+      "проверка подтверждения перевода",
+      "зачисление в кошелёк или казну"
+    ],
+    "outOfScope": [
+      "инициирование перевода",
+      "работа с банком"
+    ]
+  },
+  "roles": [
+    {
+      "id": "accountant",
+      "name": "Бухгалтер",
+      "kind": "human",
+      "responsibilities": [
+        "подтверждение поступлений"
+      ],
+      "groupSetting": "wallet.accountant_group_id"
+    },
+    {
+      "id": "depositor",
+      "name": "Плательщик",
+      "kind": "human",
+      "responsibilities": [
+        "создание заявки и подтверждение перевода"
+      ],
+      "assigneeField": "user_id"
+    }
+  ],
+  "data": [],
+  "rules": [],
+  "states": {
+    "__start__": {
+      "type": "start_event",
+      "description": "Заявка на пополнение создана"
+    },
+    "review": {
+      "type": "user_task",
+      "name": "Подтверждение поступления",
+      "description": "Сверить сумму и подтверждение перевода, затем подтвердить или отклонить",
+      "assignedRole": "accountant",
+      "timing": {
+        "sla": 24,
+        "reminder": 12
+      },
+      "decisions": [
+        {
+          "id": "confirm",
+          "label": "Подтвердить"
+        },
+        {
+          "id": "reject",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "confirmed": {
+      "type": "end_event",
+      "name": "Подтверждено",
+      "description": "Деньги зачислены",
+      "final": true
+    },
+    "rejected": {
+      "type": "end_event",
+      "name": "Отклонено",
+      "description": "Заявка отклонена",
+      "final": true
+    }
+  },
+  "gateways": {
+    "after_review": {
+      "type": "exclusive"
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_created",
+      "from": "__start__",
+      "to": "review",
+      "on": {
+        "event": "WalletDepositClaimed"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.payload.status",
+            "op": "==",
+            "value": "pending"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Заявка на пополнение поступила на проверку"
+    },
+    {
+      "id": "tr_decide",
+      "from": "review",
+      "to": "after_review",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Бухгалтер принял решение"
+    },
+    {
+      "id": "tr_confirm",
+      "from": "after_review",
+      "to": "confirmed",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "confirm"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "wallet_confirm_deposit",
+          "args": {
+            "claim_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Пополнение подтверждено",
+          "body": "${context_label}: поступление подтверждено"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_reject",
+      "from": "after_review",
+      "to": "rejected",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "reject"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "wallet_reject_deposit",
+          "args": {
+            "claim_id": "${context_id}",
+            "reason": "отклонено бухгалтером",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Пополнение отклонено",
+          "body": "${context_label}: заявка отклонена"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    }
+  ],
+  "timers": [],
+  "tests": [
+    {
+      "id": "t_confirm",
+      "description": "Подтверждение завершает процесс",
+      "given": {},
+      "when": [
+        {
+          "event": "WalletDepositClaimed",
+          "aggregate_id": "claim-1",
+          "payload": {
+            "status": "pending",
+            "amount": 1000
+          }
+        },
+        {
+          "decision": "confirm",
+          "actor": "accountant-1"
+        }
+      ],
+      "then": {
+        "state": "confirmed",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_reject",
+      "description": "Отклонение завершает процесс",
+      "given": {},
+      "when": [
+        {
+          "event": "WalletDepositClaimed",
+          "aggregate_id": "claim-1",
+          "payload": {
+            "status": "pending",
+            "amount": 1000
+          }
+        },
+        {
+          "decision": "reject",
+          "actor": "accountant-1"
+        }
+      ],
+      "then": {
+        "state": "rejected",
+        "status": "completed"
+      }
+    }
+  ],
+  "audit": {
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event"
+    ]
+  }
+}
