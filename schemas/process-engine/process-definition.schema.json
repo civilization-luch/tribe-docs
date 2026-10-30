@@ -425,6 +425,14 @@
         "role": {
           "$ref": "#/$defs/id"
         },
+        "actor": {
+          "enum": [
+            "event",
+            "system"
+          ],
+          "default": "event",
+          "description": "event — действие выполняется от имени автора события, system — от имени движка"
+        },
         "action": {
           "type": "string"
         },

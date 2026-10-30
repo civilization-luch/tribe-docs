@@ -19,7 +19,8 @@
     "endsWhen": "обращение решено или отклонено",
     "inScope": [
       "разбор обращения",
-      "работа по обращению"
+      "работа по обращению",
+      "уточнение у заявителя"
     ],
     "outOfScope": [
       "переписка с заявителем",
@@ -66,6 +67,10 @@
           "label": "Принять"
         },
         {
+          "id": "needs_info",
+          "label": "Нужна информация"
+        },
+        {
           "id": "decline",
           "label": "Отклонить"
         }
@@ -73,6 +78,11 @@
       "workDistribution": {
         "performedBy": "human"
       }
+    },
+    "awaiting_info": {
+      "type": "wait",
+      "name": "Ждём ответ заявителя",
+      "description": "Заявитель должен уточнить детали обращения"
     },
     "working": {
       "type": "user_task",
@@ -142,6 +152,26 @@
       ]
     },
     {
+      "id": "tr_needs_info",
+      "from": "triage",
+      "to": "awaiting_info",
+      "on": {
+        "decision": "needs_info"
+      },
+      "action": "support_change_status",
+      "args": {
+        "request_id": "${context_id}",
+        "status": "needs_info",
+        "via_process": true
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
       "id": "tr_triage_decline",
       "from": "triage",
       "to": "declined",
@@ -200,6 +230,36 @@
         "decision",
         "action"
       ]
+    },
+    {
+      "id": "tr_reply",
+      "from": "awaiting_info",
+      "to": "working",
+      "on": {
+        "event": "SupportRequestMessageAdded"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.payload.author_id",
+            "op": "==",
+            "value": "${author_id}"
+          }
+        ]
+      },
+      "action": "support_change_status",
+      "args": {
+        "request_id": "${context_id}",
+        "status": "accepted",
+        "via_process": true
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "action"
+      ],
+      "description": "Заявитель ответил — обращение возвращается в работу",
+      "actor": "system"
     }
   ],
   "timers": [],
@@ -272,6 +332,29 @@
       "then": {
         "state": "declined",
         "status": "completed"
+      }
+    },
+    {
+      "id": "t_needs_info",
+      "description": "Запрос информации переводит обращение в ожидание",
+      "given": {},
+      "when": [
+        {
+          "event": "SupportRequestCreated",
+          "aggregate_id": "request-1",
+          "payload": {
+            "title": "Не работает вход",
+            "author_id": "author-1"
+          }
+        },
+        {
+          "decision": "needs_info",
+          "actor": "agent-1"
+        }
+      ],
+      "then": {
+        "state": "awaiting_info",
+        "status": "active"
       }
     }
   ],
