@@ -2,7 +2,7 @@
   "schemaVersion": "0.3",
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
-  "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение. Соответствует агрегату ge_purchase.",
+  "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение, затем сопровождение сделок участников до их закрытия.",
   "version": "2026-10-30",
   "contextType": "ge_purchase",
   "host": {
@@ -12,16 +12,17 @@
     "owner": "organizer",
     "goal": "Собрать заявки до минимума и запустить закупку в срок",
     "startsWhen": "организатор создал закупку",
-    "endsWhen": "закупка запущена, истекла или отменена",
+    "endsWhen": "закупка истекла, отменена, не запустилась или все её сделки закрыты",
     "inScope": [
       "сбор заявок",
       "достижение минимума",
       "запуск",
       "истечение",
-      "отмена"
+      "отмена",
+      "сопровождение исполнения"
     ],
     "outOfScope": [
-      "исполнение сделок",
+      "условия сделки",
       "доставка",
       "расчёты с поставщиком"
     ],
@@ -103,6 +104,18 @@
       "type": "boolean",
       "required": false,
       "source": "delivery deal coverage"
+    },
+    {
+      "id": "deals_total",
+      "type": "number",
+      "required": true,
+      "source": "count(deals of purchase)"
+    },
+    {
+      "id": "deals_open",
+      "type": "number",
+      "required": true,
+      "source": "count(deals not in completed/cancelled/resolved)"
     }
   ],
   "rules": [
@@ -124,8 +137,6 @@
       "type": "wait",
       "name": "Сбор заявок",
       "description": "Принимаются заявки участников до join_deadline",
-      "action": "guarantee_refresh_purchase_totals",
-      "args": {},
       "workDistribution": {
         "performedBy": "system"
       }
@@ -134,20 +145,16 @@
       "type": "wait",
       "name": "Минимум собран",
       "description": "Дедлайн прошёл и сумма заявок достигла min_total; ждём запуска организатором",
-      "action": "guarantee_refresh_purchase_totals",
-      "args": {},
       "workDistribution": {
         "performedBy": "system"
       }
     },
     "launched": {
-      "type": "end_event",
+      "type": "wait",
       "name": "Запущено",
-      "description": "Созданы сделки по заявкам; исполнение сделок — отдельный процесс",
-      "final": true,
+      "description": "Сделки созданы; ждём, пока участники и поставщик закроют их — завершением, отменой или спором",
       "workDistribution": {
-        "performedBy": "human",
-        "approvalRequired": true
+        "performedBy": "system"
       }
     },
     "expired": {
@@ -176,6 +183,15 @@
       "final": true,
       "workDistribution": {
         "performedBy": "human"
+      }
+    },
+    "closed": {
+      "type": "end_event",
+      "name": "Закрыто",
+      "description": "Все сделки закупки завершены, отменены или разрешены",
+      "final": true,
+      "workDistribution": {
+        "performedBy": "system"
       }
     }
   },
@@ -219,30 +235,18 @@
         "event": "PurchaseLaunched"
       },
       "role": "organizer",
-      "condition": {
-        "all": [
-          {
-            "field": "collected",
-            "op": ">=",
-            "value": "${min_total}"
-          },
-          {
-            "field": "delivery_covered",
-            "op": "==",
-            "value": true
-          }
-        ]
-      },
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Досрочный запуск организатором при выполненных условиях",
+      "description": "Досрочный запуск организатором при выполненных условиях. Условия запуска проверяет домен, процесс фиксирует событие",
       "actions": [
         {
           "action": "guarantee_launch_purchase",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ]
     },
@@ -254,25 +258,18 @@
         "event": "PurchaseLaunched"
       },
       "role": "organizer",
-      "condition": {
-        "all": [
-          {
-            "field": "delivery_covered",
-            "op": "==",
-            "value": true
-          }
-        ]
-      },
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Запуск после достижения минимума",
+      "description": "Запуск после достижения минимума. Условия запуска проверяет домен, процесс фиксирует событие",
       "actions": [
         {
           "action": "guarantee_launch_purchase",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ]
     },
@@ -293,7 +290,9 @@
       "actions": [
         {
           "action": "guarantee_cancel_purchase",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ]
     },
@@ -314,7 +313,9 @@
       "actions": [
         {
           "action": "guarantee_cancel_purchase",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ]
     },
@@ -365,7 +366,9 @@
       "actions": [
         {
           "action": "guarantee_mark_purchase_ready",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ],
       "journal": [
@@ -393,13 +396,136 @@
       "actions": [
         {
           "action": "guarantee_expire_purchase",
-          "args": {}
+          "args": {
+            "purchase_id": "${context_id}"
+          }
         }
       ],
       "journal": [
         "timestamp",
         "event",
         "variables"
+      ]
+    },
+    {
+      "id": "tr_no_deals",
+      "from": "launched",
+      "to": "closed",
+      "condition": {
+        "all": [
+          {
+            "field": "deals_open",
+            "op": "==",
+            "value": 0
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Закрываем закупку: все сделки уже закрыты на момент запуска",
+      "actions": [
+        {
+          "action": "guarantee_close_purchase",
+          "args": {
+            "purchase_id": "${context_id}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tr_deals_completed",
+      "from": "launched",
+      "to": "closed",
+      "on": {
+        "event": "DealCompleted"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "deals_open",
+            "op": "==",
+            "value": 0
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Закрываем закупку: сделка завершена",
+      "actions": [
+        {
+          "action": "guarantee_close_purchase",
+          "args": {
+            "purchase_id": "${context_id}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tr_deals_cancelled",
+      "from": "launched",
+      "to": "closed",
+      "on": {
+        "event": "DealCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "deals_open",
+            "op": "==",
+            "value": 0
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Закрываем закупку: сделка отменена",
+      "actions": [
+        {
+          "action": "guarantee_close_purchase",
+          "args": {
+            "purchase_id": "${context_id}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tr_deals_resolved",
+      "from": "launched",
+      "to": "closed",
+      "on": {
+        "event": "DealResolved"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "deals_open",
+            "op": "==",
+            "value": 0
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Закрываем закупку: спор по сделке разрешён",
+      "actions": [
+        {
+          "action": "guarantee_close_purchase",
+          "args": {
+            "purchase_id": "${context_id}"
+          }
+        }
       ]
     }
   ],
@@ -458,13 +584,20 @@
       "from": "failed",
       "to": "launched",
       "reason": "Ошибочный запуск не считается успешным"
+    },
+    {
+      "id": "deny_closed_back",
+      "from": "closed",
+      "to": "launched",
+      "reason": "Закрытая закупка не возвращается в исполнение"
     }
   ],
   "agent": {
     "knowledgeSources": [],
     "allowedStates": [
       "collecting",
-      "ready"
+      "ready",
+      "launched"
     ],
     "stopConditions": [
       "нет данных о сумме заявок"
@@ -519,7 +652,7 @@
     },
     {
       "id": "t_launch_from_ready",
-      "description": "Организатор запускает после минимума",
+      "description": "Запуск подтверждён — закупка переходит к исполнению",
       "given": {
         "collected": 60000,
         "min_total": 50000,
@@ -539,7 +672,7 @@
       ],
       "then": {
         "state": "launched",
-        "status": "completed"
+        "status": "active"
       }
     },
     {
@@ -564,6 +697,37 @@
       ],
       "then": {
         "state": "failed",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_closed_when_deals_done",
+      "description": "Все сделки закрыты — закупка закрывается",
+      "given": {
+        "collected": 60000,
+        "min_total": 50000,
+        "delivery_covered": true,
+        "deals_total": 2,
+        "deals_open": 0
+      },
+      "when": [
+        {
+          "event": "PurchaseCreated"
+        },
+        {
+          "timer": "timer_join_deadline"
+        },
+        {
+          "event": "PurchaseLaunched",
+          "actor": "user-1"
+        },
+        {
+          "event": "DealCompleted",
+          "aggregate_id": "deal-1"
+        }
+      ],
+      "then": {
+        "state": "closed",
         "status": "completed"
       }
     }

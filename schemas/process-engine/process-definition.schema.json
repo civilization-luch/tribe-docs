@@ -213,6 +213,15 @@
         "groupSetting": {
           "type": "string",
           "description": "Ключ настройки сообщества, в которой лежит id группы-исполнителя"
+        },
+        "assigneeFields": {
+          "type": "array",
+          "description": "Поля объекта процесса со сторонами: задача видна любой из них",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },

@@ -1,0 +1,506 @@
+{
+  "schemaVersion": "0.3",
+  "id": "guarantee.deal",
+  "name": "Сделка под гарантию",
+  "description": "Исполнение одной сделки: поставщик принимает покрытие и блокирует депозиты, затем сделка идёт до завершения, отмены или спора. Закупка ведёт столько сделок, сколько участников запустилось.",
+  "version": "2026-10-30",
+  "contextType": "ge_deal",
+  "host": {
+    "module": "guarantee",
+    "stateMap": {
+      "proposed": "confirm",
+      "active": "execution",
+      "disputed": "disputed"
+    },
+    "contextUrl": "/community/{community}/purchases",
+    "contextLabel": "{description} · {amount} {currency}",
+    "contextPreview": [
+      {
+        "field": "amount",
+        "label": "Сумма",
+        "type": "money"
+      },
+      {
+        "field": "currency",
+        "label": "Валюта"
+      },
+      {
+        "field": "description",
+        "label": "Предмет"
+      },
+      {
+        "field": "status",
+        "label": "Статус"
+      },
+      {
+        "field": "deadline",
+        "label": "Срок",
+        "type": "date"
+      }
+    ]
+  },
+  "passport": {
+    "owner": "supplier",
+    "goal": "Принять покрытие и довести сделку до завершения без спора",
+    "startsWhen": "сделка предложена при запуске закупки или напрямую",
+    "endsWhen": "сделка завершена, отменена или разрешена после спора",
+    "inScope": [
+      "принятие сделки",
+      "блокировка покрытия",
+      "исполнение",
+      "спор"
+    ],
+    "outOfScope": [
+      "регистрация оплат",
+      "подтверждение доказательств",
+      "разбор спора по существу"
+    ],
+    "successMetrics": [
+      {
+        "name": "доля сделок, завершённых без спора",
+        "target": ">= 90%",
+        "unit": "процент"
+      },
+      {
+        "name": "время до принятия",
+        "target": "<= 48",
+        "unit": "часы"
+      }
+    ]
+  },
+  "roles": [
+    {
+      "id": "supplier",
+      "name": "Поставщик",
+      "kind": "human",
+      "responsibilities": [
+        "принятие сделки",
+        "подтверждение исполнения"
+      ],
+      "assigneeField": "beneficiary_id"
+    },
+    {
+      "id": "buyer",
+      "name": "Покупатель",
+      "kind": "human",
+      "responsibilities": [
+        "оплата"
+      ],
+      "assigneeField": "creator_id"
+    },
+    {
+      "id": "system",
+      "name": "Система",
+      "kind": "system",
+      "responsibilities": [
+        "блокировка покрытия",
+        "уведомления"
+      ]
+    }
+  ],
+  "data": [
+    {
+      "id": "amount",
+      "type": "number",
+      "required": true,
+      "source": "deal.amount"
+    },
+    {
+      "id": "currency",
+      "type": "string",
+      "required": true,
+      "source": "deal.currency"
+    }
+  ],
+  "rules": [],
+  "states": {
+    "__start__": {
+      "type": "start_event",
+      "description": "Сделка предложена"
+    },
+    "confirm": {
+      "type": "user_task",
+      "name": "Принятие сделки",
+      "description": "Проверить предмет и сумму, принять покрытие или отклонить сделку",
+      "assignedRole": "supplier",
+      "timing": {
+        "sla": 48,
+        "reminder": 24
+      },
+      "decisions": [
+        {
+          "id": "accept",
+          "label": "Принять"
+        },
+        {
+          "id": "decline",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "execution": {
+      "type": "wait",
+      "name": "Исполнение",
+      "description": "Покрытие заблокировано; ждём завершения, отмены или спора по сделке",
+      "workDistribution": {
+        "performedBy": "human"
+      },
+      "assignedRole": "supplier"
+    },
+    "disputed": {
+      "type": "wait",
+      "name": "Спор",
+      "description": "Сделка в споре; ждём решения",
+      "assignedRole": "supplier"
+    },
+    "completed": {
+      "type": "end_event",
+      "name": "Завершена",
+      "description": "Исполнение подтверждено, покрытие разблокировано",
+      "final": true
+    },
+    "cancelled": {
+      "type": "end_event",
+      "name": "Отменена",
+      "description": "Сделка отменена, покрытие освобождено",
+      "final": true
+    },
+    "resolved": {
+      "type": "end_event",
+      "name": "Решена",
+      "description": "Спор разрешён",
+      "final": true
+    }
+  },
+  "gateways": {
+    "after_confirm": {
+      "type": "exclusive"
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_proposed",
+      "from": "__start__",
+      "to": "confirm",
+      "on": {
+        "event": "DealProposed"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Сделка предложена — поставщик принимает решение"
+    },
+    {
+      "id": "tr_decide",
+      "from": "confirm",
+      "to": "after_confirm",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Решение по сделке принято, переходим к развилке"
+    },
+    {
+      "id": "tr_accept",
+      "from": "after_confirm",
+      "to": "execution",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "accept"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "guarantee_accept_deal",
+          "args": {
+            "deal_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Сделка принята, покрытие заблокировано"
+    },
+    {
+      "id": "tr_decline",
+      "from": "after_confirm",
+      "to": "cancelled",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "decline"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "guarantee_cancel_deal",
+          "args": {
+            "deal_id": "${context_id}",
+            "reason": "отклонено поставщиком",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Сделка отклонена, покрытие освобождено"
+    },
+    {
+      "id": "tr_completed",
+      "from": "execution",
+      "to": "completed",
+      "on": {
+        "event": "DealCompleted"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Исполнение подтверждено"
+    },
+    {
+      "id": "tr_disputed",
+      "from": "execution",
+      "to": "disputed",
+      "on": {
+        "event": "DealDisputed"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Открыт спор по сделке"
+    },
+    {
+      "id": "tr_cancelled",
+      "from": "execution",
+      "to": "cancelled",
+      "on": {
+        "event": "DealCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Сделка отменена до исполнения"
+    },
+    {
+      "id": "tr_resolved",
+      "from": "disputed",
+      "to": "resolved",
+      "on": {
+        "event": "DealResolved"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Спор разрешён"
+    },
+    {
+      "id": "tr_cancelled_in_dispute",
+      "from": "disputed",
+      "to": "cancelled",
+      "on": {
+        "event": "DealCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Сделка отменена во время спора"
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "deny_completed_back",
+      "from": "completed",
+      "to": "execution",
+      "reason": "Завершённая сделка не возвращается в исполнение"
+    },
+    {
+      "id": "deny_cancelled_back",
+      "from": "cancelled",
+      "to": "execution",
+      "reason": "Отменённая сделка не возвращается в исполнение"
+    }
+  ],
+  "agent": {
+    "knowledgeSources": [],
+    "allowedStates": [
+      "execution",
+      "disputed"
+    ],
+    "stopConditions": [
+      "нет данных о покрытии"
+    ],
+    "deny": [
+      "guarantee_accept_deal",
+      "guarantee_cancel_deal"
+    ]
+  },
+  "tests": [
+    {
+      "id": "t_accept",
+      "description": "Принятие переводит сделку в исполнение",
+      "given": {
+        "amount": 1000,
+        "currency": "KZT"
+      },
+      "when": [
+        {
+          "event": "DealProposed",
+          "aggregate_id": "deal-1",
+          "payload": {
+            "amount": 1000,
+            "currency": "KZT",
+            "status": "proposed"
+          }
+        },
+        {
+          "decision": "accept",
+          "actor": "supplier-1"
+        }
+      ],
+      "then": {
+        "state": "execution",
+        "status": "active"
+      }
+    },
+    {
+      "id": "t_decline",
+      "description": "Отклонение завершает сделку",
+      "given": {
+        "amount": 1000,
+        "currency": "KZT"
+      },
+      "when": [
+        {
+          "event": "DealProposed",
+          "aggregate_id": "deal-1",
+          "payload": {
+            "amount": 1000,
+            "currency": "KZT",
+            "status": "proposed"
+          }
+        },
+        {
+          "decision": "decline",
+          "actor": "supplier-1"
+        }
+      ],
+      "then": {
+        "state": "cancelled",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_completed",
+      "description": "Событие завершения закрывает сделку",
+      "given": {
+        "amount": 1000,
+        "currency": "KZT"
+      },
+      "when": [
+        {
+          "event": "DealProposed",
+          "aggregate_id": "deal-1",
+          "payload": {
+            "amount": 1000,
+            "currency": "KZT",
+            "status": "proposed"
+          }
+        },
+        {
+          "decision": "accept",
+          "actor": "supplier-1"
+        },
+        {
+          "event": "DealCompleted",
+          "aggregate_id": "deal-1",
+          "payload": {
+            "status": "completed"
+          }
+        }
+      ],
+      "then": {
+        "state": "completed",
+        "status": "completed"
+      }
+    }
+  ],
+  "audit": {
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event"
+    ]
+  }
+}
