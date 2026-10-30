@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2",
+  "schemaVersion": "0.3",
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение. Соответствует агрегату ge_purchase.",
@@ -197,58 +197,19 @@
     {
       "id": "tr_ready",
       "from": "collecting",
-      "to": "ready",
-      "on": {
-        "timer": "timer_join_deadline"
-      },
-      "condition": {
-        "all": [
-          {
-            "field": "collected",
-            "op": ">=",
-            "value": "${min_total}"
-          }
-        ]
-      },
+      "to": "after_deadline",
       "ruleRefs": [
         "br_min_collection"
       ],
-      "action": "guarantee_mark_purchase_ready",
-      "args": {},
       "journal": [
         "timestamp",
         "event",
         "variables"
       ],
-      "description": "Дедлайн прошёл, минимум собран"
-    },
-    {
-      "id": "tr_expire",
-      "from": "collecting",
-      "to": "expired",
+      "description": "Дедлайн прошёл — решаем по сумме",
       "on": {
         "timer": "timer_join_deadline"
-      },
-      "condition": {
-        "all": [
-          {
-            "field": "collected",
-            "op": "<",
-            "value": "${min_total}"
-          }
-        ]
-      },
-      "ruleRefs": [
-        "br_min_collection"
-      ],
-      "action": "guarantee_expire_purchase",
-      "args": {},
-      "journal": [
-        "timestamp",
-        "event",
-        "variables"
-      ],
-      "description": "Дедлайн прошёл, минимум не собран; заявки отменяются"
+      }
     },
     {
       "id": "tr_launch_from_collecting",
@@ -272,14 +233,18 @@
           }
         ]
       },
-      "action": "guarantee_launch_purchase",
-      "args": {},
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Досрочный запуск организатором при выполненных условиях"
+      "description": "Досрочный запуск организатором при выполненных условиях",
+      "actions": [
+        {
+          "action": "guarantee_launch_purchase",
+          "args": {}
+        }
+      ]
     },
     {
       "id": "tr_launch_from_ready",
@@ -298,14 +263,18 @@
           }
         ]
       },
-      "action": "guarantee_launch_purchase",
-      "args": {},
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Запуск после достижения минимума"
+      "description": "Запуск после достижения минимума",
+      "actions": [
+        {
+          "action": "guarantee_launch_purchase",
+          "args": {}
+        }
+      ]
     },
     {
       "id": "tr_cancel_collecting",
@@ -315,14 +284,18 @@
         "event": "PurchaseCancelled"
       },
       "role": "organizer",
-      "action": "guarantee_cancel_purchase",
-      "args": {},
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Отмена на этапе сбора"
+      "description": "Отмена на этапе сбора",
+      "actions": [
+        {
+          "action": "guarantee_cancel_purchase",
+          "args": {}
+        }
+      ]
     },
     {
       "id": "tr_cancel_ready",
@@ -332,14 +305,18 @@
         "event": "PurchaseCancelled"
       },
       "role": "organizer",
-      "action": "guarantee_cancel_purchase",
-      "args": {},
       "journal": [
         "timestamp",
         "actor",
         "event"
       ],
-      "description": "Отмена после достижения минимума"
+      "description": "Отмена после достижения минимума",
+      "actions": [
+        {
+          "action": "guarantee_cancel_purchase",
+          "args": {}
+        }
+      ]
     },
     {
       "id": "tr_launch_failed_collecting",
@@ -368,6 +345,62 @@
         "variables"
       ],
       "description": "Запуск провалился после достижения минимума"
+    },
+    {
+      "id": "tr_ready_flow",
+      "from": "after_deadline",
+      "to": "ready",
+      "condition": {
+        "all": [
+          {
+            "field": "collected",
+            "op": ">=",
+            "value": "${min_total}"
+          }
+        ]
+      },
+      "ruleRefs": [
+        "br_min_collection"
+      ],
+      "actions": [
+        {
+          "action": "guarantee_mark_purchase_ready",
+          "args": {}
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ]
+    },
+    {
+      "id": "tr_expire_flow",
+      "from": "after_deadline",
+      "to": "expired",
+      "condition": {
+        "all": [
+          {
+            "field": "collected",
+            "op": "<",
+            "value": "${min_total}"
+          }
+        ]
+      },
+      "ruleRefs": [
+        "br_min_collection"
+      ],
+      "actions": [
+        {
+          "action": "guarantee_expire_purchase",
+          "args": {}
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ]
     }
   ],
   "timers": [
@@ -544,5 +577,10 @@
       "action",
       "variables"
     ]
+  },
+  "gateways": {
+    "after_deadline": {
+      "type": "exclusive"
+    }
   }
 }

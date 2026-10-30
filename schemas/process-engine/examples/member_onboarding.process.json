@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2",
+  "schemaVersion": "0.3",
   "id": "membership.onboarding",
   "name": "Онбординг участника",
   "description": "Заявка на вступление в сообщество: проверка администратором, развилка решения, одобрение, отказ или сгорание по SLA. Простой пример процесса для знакомства с движком.",
@@ -66,12 +66,10 @@
       "name": "Проверка заявки",
       "description": "Администратор решает, принять участника или отказать",
       "assignedRole": "admin",
-      "slaHours": 72,
       "workDistribution": {
         "performedBy": "human",
         "approvalRequired": true
       },
-      "reminderHours": 24,
       "decisions": [
         {
           "id": "approve",
@@ -81,7 +79,11 @@
           "id": "reject",
           "label": "Отклонить"
         }
-      ]
+      ],
+      "timing": {
+        "sla": 72,
+        "reminder": 24
+      }
     },
     "approved": {
       "type": "end_event",
@@ -156,11 +158,6 @@
           }
         ]
       },
-      "action": "membership_approve",
-      "args": {
-        "member_id": "${context_id}",
-        "via_process": true
-      },
       "journal": [
         "timestamp",
         "actor",
@@ -173,6 +170,15 @@
           "to": "context_owner",
           "title": "Заявка в ${community_name} одобрена",
           "body": "Вас приняли в сообщество ${community_name}. Добро пожаловать."
+        }
+      ],
+      "actions": [
+        {
+          "action": "membership_approve",
+          "args": {
+            "member_id": "${context_id}",
+            "via_process": true
+          }
         }
       ]
     },
@@ -189,11 +195,6 @@
           }
         ]
       },
-      "action": "membership_remove",
-      "args": {
-        "member_id": "${context_id}",
-        "via_process": true
-      },
       "journal": [
         "timestamp",
         "actor",
@@ -207,6 +208,15 @@
           "title": "Заявка в ${community_name} отклонена",
           "body": "К сожалению, заявку отклонили. Подать новую можно в любой момент."
         }
+      ],
+      "actions": [
+        {
+          "action": "membership_remove",
+          "args": {
+            "member_id": "${context_id}",
+            "via_process": true
+          }
+        }
       ]
     },
     {
@@ -215,10 +225,6 @@
       "to": "expired",
       "on": {
         "timer": "timer_review_sla"
-      },
-      "action": "membership_expire_application",
-      "args": {
-        "member_id": "${context_id}"
       },
       "notify": [
         {
@@ -232,7 +238,15 @@
         "timer",
         "action"
       ],
-      "description": "SLA истёк — заявка снята, участник может подать заново"
+      "description": "SLA истёк — заявка снята, участник может подать заново",
+      "actions": [
+        {
+          "action": "membership_expire_application",
+          "args": {
+            "member_id": "${context_id}"
+          }
+        }
+      ]
     }
   ],
   "tests": [

@@ -18,7 +18,7 @@
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
-      "const": "0.2"
+      "const": "0.3"
     },
     "id": {
       "type": "string",
@@ -344,6 +344,25 @@
         "assignedRole": {
           "$ref": "#/$defs/id"
         },
+        "timing": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Сроки: sla — часы на решение задачи, reminder — когда напомнить, deadline — таймер состояния",
+          "properties": {
+            "sla": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "reminder": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "deadline": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
         "decisions": {
           "type": "array",
           "items": {
@@ -351,22 +370,8 @@
           },
           "description": "Варианты решения задачи; показываются как кнопки"
         },
-        "slaHours": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
         "workDistribution": {
           "$ref": "#/$defs/workDistribution"
-        },
-        "reminderHours": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Через сколько часов напомнить ответственному; по умолчанию равно slaHours"
-        },
-        "deadlineHours": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Через сколько часов после входа в состояние сработает таймер (кладётся в ${state_deadline})"
         }
       }
     },
@@ -430,26 +435,12 @@
         "role": {
           "$ref": "#/$defs/id"
         },
-        "actor": {
-          "enum": [
-            "event",
-            "system"
-          ],
-          "default": "event",
-          "description": "event — действие выполняется от имени автора события, system — от имени движка"
-        },
-        "action": {
-          "type": "string"
-        },
         "actions": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/actionCall"
           },
           "description": "Последовательность команд; выполняется по порядку"
-        },
-        "args": {
-          "type": "object"
         },
         "ruleRefs": {
           "type": "array",
@@ -469,6 +460,14 @@
             "$ref": "#/$defs/notify"
           },
           "description": "Уведомления участникам после перехода"
+        },
+        "actorMode": {
+          "enum": [
+            "event",
+            "system"
+          ],
+          "default": "event",
+          "description": "event — действие выполняется от имени автора события, system — от имени движка"
         }
       }
     },

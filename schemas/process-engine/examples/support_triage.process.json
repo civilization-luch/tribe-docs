@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "0.2",
+  "schemaVersion": "0.3",
   "id": "support.triage",
   "name": "Разбор обращения",
-  "description": "Разбор обращения и работа по нему: принять, отклонить или решить. Остальные переходы статусов выполняются в домене.",
-  "version": "2026-10-30.3",
+  "description": "Разбор обращения и работа по нему: принять, отклонить, уточнить или решить. Остальные переходы статусов выполняются в домене.",
+  "version": "2026-10-30",
   "contextType": "support_request",
   "host": {
     "module": "support",
@@ -16,15 +16,15 @@
     "owner": "support_agent",
     "goal": "Разобрать обращение и довести до решения",
     "startsWhen": "обращение создано",
-    "endsWhen": "обращение решено или отклонено",
+    "endsWhen": "обращение решено, отклонено или закрыто без ответа",
     "inScope": [
       "разбор обращения",
       "работа по обращению",
       "уточнение у заявителя"
     ],
     "outOfScope": [
-      "переписка с заявителем",
-      "решение по существу"
+      "переписка по существу",
+      "конвертация в задачу"
     ]
   },
   "roles": [
@@ -57,22 +57,24 @@
     "triage": {
       "type": "user_task",
       "name": "Разбор обращения",
-      "description": "Принять в работу или отклонить",
+      "description": "Принять в работу, отклонить или уточнить детали",
       "assignedRole": "support_agent",
-      "slaHours": 8,
-      "reminderHours": 4,
+      "timing": {
+        "sla": 8,
+        "reminder": 4
+      },
       "decisions": [
         {
           "id": "accept",
           "label": "Принять"
         },
         {
-          "id": "needs_info",
-          "label": "Нужна информация"
-        },
-        {
           "id": "decline",
           "label": "Отклонить"
+        },
+        {
+          "id": "needs_info",
+          "label": "Нужна информация"
         }
       ],
       "workDistribution": {
@@ -83,15 +85,19 @@
       "type": "wait",
       "name": "Ждём ответ заявителя",
       "description": "Заявитель должен уточнить детали обращения",
-      "deadlineHours": 72
+      "timing": {
+        "deadline": 72
+      }
     },
     "working": {
       "type": "user_task",
       "name": "Работа по обращению",
       "description": "Решить обращение или отклонить",
       "assignedRole": "support_agent",
-      "slaHours": 24,
-      "reminderHours": 12,
+      "timing": {
+        "sla": 24,
+        "reminder": 12
+      },
       "decisions": [
         {
           "id": "resolve",
@@ -109,11 +115,13 @@
     "resolved": {
       "type": "end_event",
       "name": "Решено",
+      "description": "Обращение решено",
       "final": true
     },
     "declined": {
       "type": "end_event",
       "name": "Отклонено",
+      "description": "Обращение отклонено",
       "final": true
     },
     "closed": {
@@ -123,7 +131,14 @@
       "final": true
     }
   },
-  "gateways": {},
+  "gateways": {
+    "after_triage": {
+      "type": "exclusive"
+    },
+    "after_work": {
+      "type": "exclusive"
+    }
+  },
   "transitions": [
     {
       "id": "tr_created",
@@ -139,18 +154,29 @@
       "description": "Новое обращение поступило на разбор"
     },
     {
-      "id": "tr_accept",
+      "id": "tr_decide",
       "from": "triage",
-      "to": "working",
-      "on": {
-        "decision": "accept"
-      },
+      "to": "after_triage",
       "journal": [
         "timestamp",
         "actor",
-        "decision",
-        "action"
+        "decision"
       ],
+      "description": "Агент принял решение, переходим к развилке"
+    },
+    {
+      "id": "tr_accept",
+      "from": "after_triage",
+      "to": "working",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "accept"
+          }
+        ]
+      },
       "actions": [
         {
           "action": "support_change_status",
@@ -174,81 +200,67 @@
             "via_process": true
           }
         }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_decline",
+      "from": "after_triage",
+      "to": "declined",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "decline"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "declined",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
       ]
     },
     {
       "id": "tr_needs_info",
-      "from": "triage",
+      "from": "after_triage",
       "to": "awaiting_info",
-      "on": {
-        "decision": "needs_info"
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "needs_info"
+          }
+        ]
       },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "needs_info",
-        "via_process": true
-      },
-      "journal": [
-        "timestamp",
-        "actor",
-        "decision",
-        "action"
-      ]
-    },
-    {
-      "id": "tr_triage_decline",
-      "from": "triage",
-      "to": "declined",
-      "on": {
-        "decision": "decline"
-      },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "declined",
-        "via_process": true
-      },
-      "journal": [
-        "timestamp",
-        "actor",
-        "decision",
-        "action"
-      ]
-    },
-    {
-      "id": "tr_resolve",
-      "from": "working",
-      "to": "resolved",
-      "on": {
-        "decision": "resolve"
-      },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "resolved",
-        "via_process": true
-      },
-      "journal": [
-        "timestamp",
-        "actor",
-        "decision",
-        "action"
-      ]
-    },
-    {
-      "id": "tr_work_decline",
-      "from": "working",
-      "to": "declined",
-      "on": {
-        "decision": "decline"
-      },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "declined",
-        "via_process": true
-      },
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "needs_info",
+            "via_process": true
+          }
+        }
+      ],
       "journal": [
         "timestamp",
         "actor",
@@ -263,6 +275,7 @@
       "on": {
         "event": "SupportRequestMessageAdded"
       },
+      "actorMode": "system",
       "condition": {
         "all": [
           {
@@ -272,19 +285,22 @@
           }
         ]
       },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "accepted",
-        "via_process": true
-      },
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "accepted",
+            "via_process": true
+          }
+        }
+      ],
       "journal": [
         "timestamp",
         "event",
         "action"
       ],
-      "description": "Заявитель ответил — обращение возвращается в работу",
-      "actor": "system"
+      "description": "Заявитель ответил — обращение возвращается в работу"
     },
     {
       "id": "tr_no_reply",
@@ -293,19 +309,94 @@
       "on": {
         "timer": "timer_awaiting_reply"
       },
-      "actor": "system",
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "closed",
-        "via_process": true
-      },
+      "actorMode": "system",
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "closed",
+            "via_process": true
+          }
+        }
+      ],
       "journal": [
         "timestamp",
         "timer",
         "action"
       ],
       "description": "Заявитель не ответил — обращение закрыто"
+    },
+    {
+      "id": "tr_work",
+      "from": "working",
+      "to": "after_work",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Работа завершена решением, переходим к развилке"
+    },
+    {
+      "id": "tr_resolve",
+      "from": "after_work",
+      "to": "resolved",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "resolve"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "resolved",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_work_decline",
+      "from": "after_work",
+      "to": "declined",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "decline"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "declined",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
     }
   ],
   "timers": [
