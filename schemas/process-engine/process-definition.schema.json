@@ -402,6 +402,7 @@
         "type": {
           "enum": [
             "exclusive",
+            "event",
             "parallel_fork",
             "parallel_join"
           ]
@@ -424,6 +425,10 @@
         },
         "onSuccess": {
           "type": "string"
+        },
+        "assignedRole": {
+          "type": "string",
+          "description": "Роль дорожки для развилки на диаграмме"
         }
       }
     },
