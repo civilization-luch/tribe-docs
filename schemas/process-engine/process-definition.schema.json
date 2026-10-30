@@ -17,54 +17,93 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "const": "0.2" },
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.]*$" },
-    "name": { "type": "string", "minLength": 1 },
-    "description": { "type": "string" },
-    "version": { "type": "string", "minLength": 1 },
-    "contextType": { "type": "string" },
-    "passport": { "$ref": "#/$defs/passport" },
+    "schemaVersion": {
+      "const": "0.2"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextType": {
+      "type": "string"
+    },
+    "passport": {
+      "$ref": "#/$defs/passport"
+    },
     "roles": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/role" }
+      "items": {
+        "$ref": "#/$defs/role"
+      }
     },
     "data": {
       "type": "array",
-      "items": { "$ref": "#/$defs/dataField" }
+      "items": {
+        "$ref": "#/$defs/dataField"
+      }
     },
     "rules": {
       "type": "array",
-      "items": { "$ref": "#/$defs/rule" }
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
     },
     "states": {
       "type": "object",
       "minProperties": 2,
-      "additionalProperties": { "$ref": "#/$defs/state" }
+      "additionalProperties": {
+        "$ref": "#/$defs/state"
+      }
     },
     "gateways": {
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/gateway" }
+      "additionalProperties": {
+        "$ref": "#/$defs/gateway"
+      }
     },
     "transitions": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/transition" }
+      "items": {
+        "$ref": "#/$defs/transition"
+      }
     },
     "timers": {
       "type": "array",
-      "items": { "$ref": "#/$defs/timer" }
+      "items": {
+        "$ref": "#/$defs/timer"
+      }
     },
     "forbidden": {
       "type": "array",
-      "items": { "$ref": "#/$defs/forbiddenTransition" }
+      "items": {
+        "$ref": "#/$defs/forbiddenTransition"
+      }
     },
-    "agent": { "$ref": "#/$defs/agent" },
+    "agent": {
+      "$ref": "#/$defs/agent"
+    },
     "tests": {
       "type": "array",
-      "items": { "$ref": "#/$defs/testCase" }
+      "items": {
+        "$ref": "#/$defs/testCase"
+      }
     },
-    "audit": { "$ref": "#/$defs/audit" }
+    "audit": {
+      "$ref": "#/$defs/audit"
+    }
   },
   "$defs": {
     "id": {
@@ -73,25 +112,55 @@
     },
     "passport": {
       "type": "object",
-      "required": ["owner"],
+      "required": [
+        "owner"
+      ],
       "additionalProperties": false,
       "properties": {
-        "owner": { "$ref": "#/$defs/id" },
-        "goal": { "type": "string" },
-        "startsWhen": { "type": "string" },
-        "endsWhen": { "type": "string" },
-        "inScope": { "type": "array", "items": { "type": "string" } },
-        "outOfScope": { "type": "array", "items": { "type": "string" } },
+        "owner": {
+          "$ref": "#/$defs/id"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "startsWhen": {
+          "type": "string"
+        },
+        "endsWhen": {
+          "type": "string"
+        },
+        "inScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "successMetrics": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "target"],
+            "required": [
+              "name",
+              "target"
+            ],
             "additionalProperties": false,
             "properties": {
-              "name": { "type": "string", "minLength": 1 },
-              "target": { "type": "string" },
-              "unit": { "type": "string" }
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              }
             }
           }
         }
@@ -99,98 +168,270 @@
     },
     "role": {
       "type": "object",
-      "required": ["id", "name", "kind"],
+      "required": [
+        "id",
+        "name",
+        "kind"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "name": { "type": "string", "minLength": 1 },
-        "kind": { "enum": ["human", "system", "ai"] },
-        "responsibilities": { "type": "array", "items": { "type": "string" } }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "human",
+            "system",
+            "ai"
+          ]
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "dataField": {
       "type": "object",
-      "required": ["id", "type"],
+      "required": [
+        "id",
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "type": {
-          "enum": ["string", "number", "boolean", "date", "datetime", "object", "array"]
+        "id": {
+          "$ref": "#/$defs/id"
         },
-        "required": { "type": "boolean", "default": false },
-        "source": { "type": "string" },
-        "description": { "type": "string" }
+        "type": {
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "date",
+            "datetime",
+            "object",
+            "array"
+          ]
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "source": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "rule": {
       "type": "object",
-      "required": ["id", "type", "version"],
+      "required": [
+        "id",
+        "type",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "name": { "type": "string" },
-        "type": { "enum": ["deterministic", "policy", "ai_assisted"] },
-        "version": { "type": "string", "minLength": 1 },
-        "source": { "type": "string" },
-        "description": { "type": "string" }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "deterministic",
+            "policy",
+            "ai_assisted"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "workDistribution": {
       "type": "object",
-      "required": ["performedBy"],
+      "required": [
+        "performedBy"
+      ],
       "additionalProperties": false,
       "properties": {
-        "performedBy": { "enum": ["human", "system", "ai"] },
-        "autonomy": { "enum": ["manual", "assist", "supervised", "autonomous"] },
-        "approvalRequired": { "type": "boolean" },
-        "restrictions": { "type": "array", "items": { "type": "string" } }
+        "performedBy": {
+          "enum": [
+            "human",
+            "system",
+            "ai"
+          ]
+        },
+        "autonomy": {
+          "enum": [
+            "manual",
+            "assist",
+            "supervised",
+            "autonomous"
+          ]
+        },
+        "approvalRequired": {
+          "type": "boolean"
+        },
+        "restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "state": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
-          "enum": ["start_event", "end_event", "wait", "automated_task", "user_task"]
+          "enum": [
+            "start_event",
+            "end_event",
+            "wait",
+            "automated_task",
+            "user_task"
+          ]
         },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "final": { "type": "boolean", "default": false },
-        "action": { "type": "string" },
-        "args": { "type": "object" },
-        "assignedRole": { "$ref": "#/$defs/id" },
-        "slaHours": { "type": "number", "exclusiveMinimum": 0 },
-        "workDistribution": { "$ref": "#/$defs/workDistribution" }
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "final": {
+          "type": "boolean",
+          "default": false
+        },
+        "action": {
+          "type": "string"
+        },
+        "args": {
+          "type": "object"
+        },
+        "assignedRole": {
+          "$ref": "#/$defs/id"
+        },
+        "slaHours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "workDistribution": {
+          "$ref": "#/$defs/workDistribution"
+        },
+        "reminderHours": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Через сколько часов напомнить ответственному; по умолчанию равно slaHours"
+        }
       }
     },
     "gateway": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "enum": ["exclusive", "parallel_fork", "parallel_join"] },
-        "targets": { "type": "array", "items": { "type": "string" } },
-        "requiredIncoming": { "type": "array", "items": { "type": "string" } },
-        "onSuccess": { "type": "string" }
+        "type": {
+          "enum": [
+            "exclusive",
+            "parallel_fork",
+            "parallel_join"
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiredIncoming": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "onSuccess": {
+          "type": "string"
+        }
       }
     },
     "transition": {
       "type": "object",
-      "required": ["id", "from", "to"],
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "from": { "type": "string", "minLength": 1 },
-        "to": { "type": "string", "minLength": 1 },
-        "on": { "$ref": "#/$defs/trigger" },
-        "condition": { "$ref": "#/$defs/condition" },
-        "role": { "$ref": "#/$defs/id" },
-        "action": { "type": "string" },
-        "args": { "type": "object" },
-        "ruleRefs": { "type": "array", "items": { "$ref": "#/$defs/id" } },
-        "journal": { "$ref": "#/$defs/journal" },
-        "description": { "type": "string" }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "on": {
+          "$ref": "#/$defs/trigger"
+        },
+        "condition": {
+          "$ref": "#/$defs/condition"
+        },
+        "role": {
+          "$ref": "#/$defs/id"
+        },
+        "action": {
+          "type": "string"
+        },
+        "args": {
+          "type": "object"
+        },
+        "ruleRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "journal": {
+          "$ref": "#/$defs/journal"
+        },
+        "description": {
+          "type": "string"
+        },
+        "notify": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/notify"
+          },
+          "description": "Уведомления участникам после перехода"
+        }
       }
     },
     "trigger": {
@@ -198,9 +439,17 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "event": { "type": "string", "minLength": 1 },
-        "decision": { "type": "string", "minLength": 1 },
-        "timer": { "$ref": "#/$defs/id" }
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timer": {
+          "$ref": "#/$defs/id"
+        }
       }
     },
     "condition": {
@@ -208,29 +457,66 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "all": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
-        "any": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } }
+        "all": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/clause"
+          }
+        },
+        "any": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/clause"
+          }
+        }
       }
     },
     "clause": {
       "type": "object",
-      "required": ["field", "op"],
+      "required": [
+        "field",
+        "op"
+      ],
       "additionalProperties": false,
       "properties": {
-        "field": { "type": "string", "minLength": 1 },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
         "op": {
-          "enum": ["==", "!=", ">", ">=", "<", "<=", "in", "exists", "not_exists"]
+          "enum": [
+            "==",
+            "!=",
+            ">",
+            ">=",
+            "<",
+            "<=",
+            "in",
+            "exists",
+            "not_exists"
+          ]
         },
         "value": {}
       }
     },
     "timer": {
       "type": "object",
-      "required": ["id", "state", "at"],
+      "required": [
+        "id",
+        "state",
+        "at"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "state": { "type": "string", "minLength": 1 },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
         "at": {
           "type": "string",
           "minLength": 1,
@@ -240,19 +526,43 @@
     },
     "forbiddenTransition": {
       "type": "object",
-      "required": ["id", "from", "to", "reason"],
+      "required": [
+        "id",
+        "from",
+        "to",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "from": { "type": "string", "minLength": 1 },
-        "to": { "type": "string", "minLength": 1 },
-        "reason": { "type": "string", "minLength": 1 }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "journal": {
       "type": "array",
       "items": {
-        "enum": ["actor", "decision", "timestamp", "variables", "event", "action"]
+        "enum": [
+          "actor",
+          "decision",
+          "timestamp",
+          "variables",
+          "event",
+          "action",
+          "timer"
+        ]
       },
       "uniqueItems": true
     },
@@ -260,10 +570,30 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "knowledgeSources": { "type": "array", "items": { "type": "string" } },
-        "allowedStates": { "type": "array", "items": { "type": "string" } },
-        "stopConditions": { "type": "array", "items": { "type": "string" } },
-        "deny": { "type": "array", "items": { "type": "string" } }
+        "knowledgeSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedStates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stopConditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "stimulus": {
@@ -271,30 +601,70 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "event": { "type": "string", "minLength": 1 },
-        "decision": { "type": "string", "minLength": 1 },
-        "timer": { "$ref": "#/$defs/id" },
-        "actor": { "type": "string" },
-        "aggregate_id": { "type": "string" },
-        "payload": { "type": "object" }
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timer": {
+          "$ref": "#/$defs/id"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "aggregate_id": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object"
+        }
       }
     },
     "testCase": {
       "type": "object",
-      "required": ["id", "then"],
+      "required": [
+        "id",
+        "then"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "description": { "type": "string" },
-        "given": { "type": "object" },
-        "when": { "type": "array", "items": { "$ref": "#/$defs/stimulus" } },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "description": {
+          "type": "string"
+        },
+        "given": {
+          "type": "object"
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stimulus"
+          }
+        },
         "then": {
           "type": "object",
-          "required": ["state"],
+          "required": [
+            "state"
+          ],
           "additionalProperties": false,
           "properties": {
-            "state": { "type": "string", "minLength": 1 },
-            "status": { "enum": ["active", "awaiting_user", "completed", "failed"] }
+            "state": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "enum": [
+                "active",
+                "awaiting_user",
+                "completed",
+                "failed"
+              ]
+            }
           }
         }
       }
@@ -306,9 +676,46 @@
         "include": {
           "type": "array",
           "items": {
-            "enum": ["actor", "decision", "timestamp", "variables", "event", "action"]
+            "enum": [
+              "actor",
+              "decision",
+              "timestamp",
+              "variables",
+              "event",
+              "action"
+            ]
           },
           "uniqueItems": true
+        }
+      }
+    },
+    "notify": {
+      "type": "object",
+      "required": [
+        "to",
+        "title",
+        "body"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "to": {
+          "enum": [
+            "context_owner",
+            "owner",
+            "actor"
+          ],
+          "description": "context_owner — владелец объекта процесса, owner — владельцы сообщества, actor — тот, кто совершил переход"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "link": {
+          "type": "string"
         }
       }
     }

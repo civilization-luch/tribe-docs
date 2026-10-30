@@ -2,18 +2,31 @@
   "schemaVersion": "0.2",
   "id": "membership.onboarding",
   "name": "Онбординг участника",
-  "description": "Заявка на вступление в сообщество: проверка администратором, развилка решения, одобрение или отказ. Простой пример процесса для знакомства с движком.",
+  "description": "Заявка на вступление в сообщество: проверка администратором, развилка решения, одобрение, отказ или сгорание по SLA. Простой пример процесса для знакомства с движком.",
   "version": "2026-10-30",
   "contextType": "member",
   "passport": {
     "owner": "admin",
     "goal": "Принять или отклонить заявку на вступление",
     "startsWhen": "участник подал заявку",
-    "endsWhen": "заявка одобрена или отклонена",
-    "inScope": ["рассмотрение заявки"],
-    "outOfScope": ["онбординг после принятия"],
+    "endsWhen": "заявка одобрена, отклонена или истекла",
+    "inScope": [
+      "рассмотрение заявки"
+    ],
+    "outOfScope": [
+      "онбординг после принятия"
+    ],
     "successMetrics": [
-      { "name": "время рассмотрения", "target": "<= 24 ч", "unit": "часы" }
+      {
+        "name": "время рассмотрения",
+        "target": "<= 72 ч",
+        "unit": "часы"
+      },
+      {
+        "name": "напоминание ответственному",
+        "target": "через 24 ч",
+        "unit": "часы"
+      }
     ]
   },
   "roles": [
@@ -21,13 +34,17 @@
       "id": "admin",
       "name": "Администратор",
       "kind": "human",
-      "responsibilities": ["рассмотрение заявки"]
+      "responsibilities": [
+        "рассмотрение заявки"
+      ]
     },
     {
       "id": "applicant",
       "name": "Заявитель",
       "kind": "human",
-      "responsibilities": ["подача заявки"]
+      "responsibilities": [
+        "подача заявки"
+      ]
     }
   ],
   "data": [],
@@ -42,8 +59,12 @@
       "name": "Проверка заявки",
       "description": "Администратор решает, принять участника или отказать",
       "assignedRole": "admin",
-      "slaHours": 24,
-      "workDistribution": { "performedBy": "human", "approvalRequired": true }
+      "slaHours": 72,
+      "workDistribution": {
+        "performedBy": "human",
+        "approvalRequired": true
+      },
+      "reminderHours": 24
     },
     "approved": {
       "type": "end_event",
@@ -55,6 +76,12 @@
       "type": "end_event",
       "name": "Отклонено",
       "description": "Заявка отклонена",
+      "final": true
+    },
+    "expired": {
+      "type": "end_event",
+      "name": "Истекло",
+      "description": "Администратор не рассмотрел заявку за 72 часа, заявка снята",
       "final": true
     }
   },
@@ -68,13 +95,23 @@
       "id": "tr_apply",
       "from": "__start__",
       "to": "review",
-      "on": { "event": "MemberJoined" },
+      "on": {
+        "event": "MemberJoined"
+      },
       "condition": {
         "all": [
-          { "field": "event.payload.status", "op": "==", "value": "applicant" }
+          {
+            "field": "event.payload.status",
+            "op": "==",
+            "value": "applicant"
+          }
         ]
       },
-      "journal": ["timestamp", "actor", "event"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Заявка поступила на рассмотрение"
     },
     {
@@ -82,7 +119,11 @@
       "from": "review",
       "to": "decision",
       "role": "admin",
-      "journal": ["timestamp", "actor", "decision"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
       "description": "Администратор принял решение, переходим к развилке"
     },
     {
@@ -90,24 +131,89 @@
       "from": "decision",
       "to": "approved",
       "condition": {
-        "all": [{ "field": "last_decision", "op": "==", "value": "approve" }]
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "approve"
+          }
+        ]
       },
       "action": "membership_approve",
-      "args": { "member_id": "${context_id}" },
-      "journal": ["timestamp", "actor", "decision", "action"],
-      "description": "Решение «одобрить» — участник принят"
+      "args": {
+        "member_id": "${context_id}"
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Решение «одобрить» — участник принят",
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Заявка в ${community_name} одобрена",
+          "body": "Вас приняли в сообщество ${community_name}. Добро пожаловать."
+        }
+      ]
     },
     {
       "id": "tr_reject",
       "from": "decision",
       "to": "rejected",
       "condition": {
-        "all": [{ "field": "last_decision", "op": "==", "value": "reject" }]
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "reject"
+          }
+        ]
       },
       "action": "membership_remove",
-      "args": { "member_id": "${context_id}" },
-      "journal": ["timestamp", "actor", "decision", "action"],
-      "description": "Решение «отклонить» — заявка удалена"
+      "args": {
+        "member_id": "${context_id}"
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Решение «отклонить» — заявка удалена",
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Заявка в ${community_name} отклонена",
+          "body": "К сожалению, заявку отклонили. Подать новую можно в любой момент."
+        }
+      ]
+    },
+    {
+      "id": "tr_expire",
+      "from": "review",
+      "to": "expired",
+      "on": {
+        "timer": "timer_review_sla"
+      },
+      "action": "membership_expire_application",
+      "args": {
+        "member_id": "${context_id}"
+      },
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Заявка в ${community_name} истекла",
+          "body": "Мы не рассмотрели заявку за 72 часа. Подать заново можно в любой момент."
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "timer",
+        "action"
+      ],
+      "description": "SLA истёк — заявка снята, участник может подать заново"
     }
   ],
   "tests": [
@@ -116,23 +222,80 @@
       "description": "Одобрение ведёт в approved",
       "given": {},
       "when": [
-        { "event": "MemberJoined", "aggregate_id": "member-1", "payload": { "status": "applicant" } },
-        { "decision": "approve", "actor": "admin-1" }
+        {
+          "event": "MemberJoined",
+          "aggregate_id": "member-1",
+          "payload": {
+            "status": "applicant"
+          }
+        },
+        {
+          "decision": "approve",
+          "actor": "admin-1"
+        }
       ],
-      "then": { "state": "approved", "status": "completed" }
+      "then": {
+        "state": "approved",
+        "status": "completed"
+      }
     },
     {
       "id": "t_reject",
       "description": "Отказ ведёт в rejected",
       "given": {},
       "when": [
-        { "event": "MemberJoined", "aggregate_id": "member-1", "payload": { "status": "applicant" } },
-        { "decision": "reject", "actor": "admin-1" }
+        {
+          "event": "MemberJoined",
+          "aggregate_id": "member-1",
+          "payload": {
+            "status": "applicant"
+          }
+        },
+        {
+          "decision": "reject",
+          "actor": "admin-1"
+        }
       ],
-      "then": { "state": "rejected", "status": "completed" }
+      "then": {
+        "state": "rejected",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_expire",
+      "description": "Истечение SLA снимает заявку",
+      "given": {},
+      "when": [
+        {
+          "event": "MemberJoined",
+          "aggregate_id": "member-1",
+          "payload": {
+            "status": "applicant"
+          }
+        },
+        {
+          "timer": "timer_review_sla"
+        }
+      ],
+      "then": {
+        "state": "expired",
+        "status": "completed"
+      }
     }
   ],
   "audit": {
-    "include": ["actor", "decision", "timestamp", "event"]
-  }
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event"
+    ]
+  },
+  "timers": [
+    {
+      "id": "timer_review_sla",
+      "state": "review",
+      "at": "${task_deadline}"
+    }
+  ]
 }
