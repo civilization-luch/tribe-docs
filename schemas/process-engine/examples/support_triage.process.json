@@ -82,7 +82,8 @@
     "awaiting_info": {
       "type": "wait",
       "name": "Ждём ответ заявителя",
-      "description": "Заявитель должен уточнить детали обращения"
+      "description": "Заявитель должен уточнить детали обращения",
+      "deadlineHours": 72
     },
     "working": {
       "type": "user_task",
@@ -113,6 +114,12 @@
     "declined": {
       "type": "end_event",
       "name": "Отклонено",
+      "final": true
+    },
+    "closed": {
+      "type": "end_event",
+      "name": "Закрыто",
+      "description": "Ответа не было, обращение закрыто",
       "final": true
     }
   },
@@ -278,9 +285,36 @@
       ],
       "description": "Заявитель ответил — обращение возвращается в работу",
       "actor": "system"
+    },
+    {
+      "id": "tr_no_reply",
+      "from": "awaiting_info",
+      "to": "closed",
+      "on": {
+        "timer": "timer_awaiting_reply"
+      },
+      "actor": "system",
+      "action": "support_change_status",
+      "args": {
+        "request_id": "${context_id}",
+        "status": "closed",
+        "via_process": true
+      },
+      "journal": [
+        "timestamp",
+        "timer",
+        "action"
+      ],
+      "description": "Заявитель не ответил — обращение закрыто"
     }
   ],
-  "timers": [],
+  "timers": [
+    {
+      "id": "timer_awaiting_reply",
+      "state": "awaiting_info",
+      "at": "${state_deadline}"
+    }
+  ],
   "tests": [
     {
       "id": "t_accept",

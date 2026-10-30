@@ -362,6 +362,11 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "description": "Через сколько часов напомнить ответственному; по умолчанию равно slaHours"
+        },
+        "deadlineHours": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Через сколько часов после входа в состояние сработает таймер (кладётся в ${state_deadline})"
         }
       }
     },
