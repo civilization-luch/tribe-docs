@@ -10,7 +10,41 @@
     "stateMap": {
       "pending": "review"
     },
-    "contextUrl": "/community/{community}/treasury"
+    "contextUrl": "/community/{community}/treasury",
+    "contextPreview": [
+      {
+        "field": "amount",
+        "label": "Сумма",
+        "type": "money"
+      },
+      {
+        "field": "currency",
+        "label": "Валюта"
+      },
+      {
+        "field": "method",
+        "label": "Способ"
+      },
+      {
+        "field": "reference",
+        "label": "Назначение"
+      },
+      {
+        "field": "doc_number",
+        "label": "Документ"
+      },
+      {
+        "field": "doc_date",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "field": "proof",
+        "label": "Подтверждение",
+        "type": "link"
+      }
+    ],
+    "contextLabel": "Приход {amount} {currency} · {reference}"
   },
   "passport": {
     "owner": "accountant",

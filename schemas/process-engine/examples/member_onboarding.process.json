@@ -10,7 +10,17 @@
     "stateMap": {
       "applicant": "review"
     },
-    "contextUrl": "/community/{community}/members/{user_id}"
+    "contextUrl": "/community/{community}/members/{user_id}",
+    "contextPreview": [
+      {
+        "field": "user_id",
+        "label": "Пользователь"
+      },
+      {
+        "field": "status",
+        "label": "Статус"
+      }
+    ]
   },
   "passport": {
     "owner": "admin",

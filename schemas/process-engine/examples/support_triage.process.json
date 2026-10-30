@@ -10,7 +10,17 @@
     "stateMap": {
       "new": "triage"
     },
-    "contextUrl": "/community/{community}/support/{id}"
+    "contextUrl": "/community/{community}/support/{id}",
+    "contextPreview": [
+      {
+        "field": "title",
+        "label": "Тема"
+      },
+      {
+        "field": "body",
+        "label": "Текст"
+      }
+    ]
   },
   "passport": {
     "owner": "support_agent",
