@@ -5,16 +5,37 @@
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение. Соответствует агрегату ge_purchase.",
   "version": "2026-10-30",
   "contextType": "ge_purchase",
+  "host": {
+    "module": "guarantee"
+  },
   "passport": {
     "owner": "organizer",
     "goal": "Собрать заявки до минимума и запустить закупку в срок",
     "startsWhen": "организатор создал закупку",
     "endsWhen": "закупка запущена, истекла или отменена",
-    "inScope": ["сбор заявок", "достижение минимума", "запуск", "истечение", "отмена"],
-    "outOfScope": ["исполнение сделок", "доставка", "расчёты с поставщиком"],
+    "inScope": [
+      "сбор заявок",
+      "достижение минимума",
+      "запуск",
+      "истечение",
+      "отмена"
+    ],
+    "outOfScope": [
+      "исполнение сделок",
+      "доставка",
+      "расчёты с поставщиком"
+    ],
     "successMetrics": [
-      { "name": "доля закупок, достигших минимума", "target": ">= 50%", "unit": "процент" },
-      { "name": "время до запуска", "target": "<= join_deadline", "unit": "дни" }
+      {
+        "name": "доля закупок, достигших минимума",
+        "target": ">= 50%",
+        "unit": "процент"
+      },
+      {
+        "name": "время до запуска",
+        "target": "<= join_deadline",
+        "unit": "дни"
+      }
     ]
   },
   "roles": [
@@ -22,28 +43,67 @@
       "id": "organizer",
       "name": "Организатор",
       "kind": "human",
-      "responsibilities": ["создание закупки", "запуск", "отмена"]
+      "responsibilities": [
+        "создание закупки",
+        "запуск",
+        "отмена"
+      ]
     },
     {
       "id": "member",
       "name": "Участник",
       "kind": "human",
-      "responsibilities": ["подача и отзыв заявки"]
+      "responsibilities": [
+        "подача и отзыв заявки"
+      ]
     },
     {
       "id": "system",
       "name": "Система",
       "kind": "system",
-      "responsibilities": ["таймеры", "подсчёт собранной суммы"]
+      "responsibilities": [
+        "таймеры",
+        "подсчёт собранной суммы"
+      ]
     }
   ],
   "data": [
-    { "id": "collected", "type": "number", "required": true, "source": "sum(submitted applications)" },
-    { "id": "min_total", "type": "number", "required": true, "source": "purchase.min_total" },
-    { "id": "max_total", "type": "number", "required": false, "source": "purchase.max_total" },
-    { "id": "max_per_member", "type": "number", "required": false, "source": "purchase.max_per_member" },
-    { "id": "join_deadline", "type": "datetime", "required": true, "source": "purchase.join_deadline" },
-    { "id": "delivery_covered", "type": "boolean", "required": false, "source": "delivery deal coverage" }
+    {
+      "id": "collected",
+      "type": "number",
+      "required": true,
+      "source": "sum(submitted applications)"
+    },
+    {
+      "id": "min_total",
+      "type": "number",
+      "required": true,
+      "source": "purchase.min_total"
+    },
+    {
+      "id": "max_total",
+      "type": "number",
+      "required": false,
+      "source": "purchase.max_total"
+    },
+    {
+      "id": "max_per_member",
+      "type": "number",
+      "required": false,
+      "source": "purchase.max_per_member"
+    },
+    {
+      "id": "join_deadline",
+      "type": "datetime",
+      "required": true,
+      "source": "purchase.join_deadline"
+    },
+    {
+      "id": "delivery_covered",
+      "type": "boolean",
+      "required": false,
+      "source": "delivery deal coverage"
+    }
   ],
   "rules": [
     {
@@ -66,7 +126,9 @@
       "description": "Принимаются заявки участников до join_deadline",
       "action": "guarantee_refresh_purchase_totals",
       "args": {},
-      "workDistribution": { "performedBy": "system" }
+      "workDistribution": {
+        "performedBy": "system"
+      }
     },
     "ready": {
       "type": "wait",
@@ -74,35 +136,47 @@
       "description": "Дедлайн прошёл и сумма заявок достигла min_total; ждём запуска организатором",
       "action": "guarantee_refresh_purchase_totals",
       "args": {},
-      "workDistribution": { "performedBy": "system" }
+      "workDistribution": {
+        "performedBy": "system"
+      }
     },
     "launched": {
       "type": "end_event",
       "name": "Запущено",
       "description": "Созданы сделки по заявкам; исполнение сделок — отдельный процесс",
       "final": true,
-      "workDistribution": { "performedBy": "human", "approvalRequired": true }
+      "workDistribution": {
+        "performedBy": "human",
+        "approvalRequired": true
+      }
     },
     "expired": {
       "type": "end_event",
       "name": "Истекло",
       "description": "Дедлайн прошёл, минимум не собран; все заявки отменены",
       "final": true,
-      "workDistribution": { "performedBy": "system" }
+      "workDistribution": {
+        "performedBy": "system"
+      }
     },
     "cancelled": {
       "type": "end_event",
       "name": "Отменено",
       "description": "Отменено организатором; заявки и сделки отменены",
       "final": true,
-      "workDistribution": { "performedBy": "human", "approvalRequired": true }
+      "workDistribution": {
+        "performedBy": "human",
+        "approvalRequired": true
+      }
     },
     "failed": {
       "type": "end_event",
       "name": "Ошибка запуска",
       "description": "Запуск не удался: сделки не созданы. Требуется разбор человеком",
       "final": true,
-      "workDistribution": { "performedBy": "human" }
+      "workDistribution": {
+        "performedBy": "human"
+      }
     }
   },
   "transitions": [
@@ -110,105 +184,189 @@
       "id": "tr_created",
       "from": "__start__",
       "to": "collecting",
-      "on": { "event": "PurchaseCreated" },
-      "journal": ["timestamp", "actor", "event"],
+      "on": {
+        "event": "PurchaseCreated"
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Старт процесса при создании закупки"
     },
     {
       "id": "tr_ready",
       "from": "collecting",
       "to": "ready",
-      "on": { "timer": "timer_join_deadline" },
-      "condition": {
-        "all": [{ "field": "collected", "op": ">=", "value": "${min_total}" }]
+      "on": {
+        "timer": "timer_join_deadline"
       },
-      "ruleRefs": ["br_min_collection"],
+      "condition": {
+        "all": [
+          {
+            "field": "collected",
+            "op": ">=",
+            "value": "${min_total}"
+          }
+        ]
+      },
+      "ruleRefs": [
+        "br_min_collection"
+      ],
       "action": "guarantee_mark_purchase_ready",
       "args": {},
-      "journal": ["timestamp", "event", "variables"],
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
       "description": "Дедлайн прошёл, минимум собран"
     },
     {
       "id": "tr_expire",
       "from": "collecting",
       "to": "expired",
-      "on": { "timer": "timer_join_deadline" },
-      "condition": {
-        "all": [{ "field": "collected", "op": "<", "value": "${min_total}" }]
+      "on": {
+        "timer": "timer_join_deadline"
       },
-      "ruleRefs": ["br_min_collection"],
+      "condition": {
+        "all": [
+          {
+            "field": "collected",
+            "op": "<",
+            "value": "${min_total}"
+          }
+        ]
+      },
+      "ruleRefs": [
+        "br_min_collection"
+      ],
       "action": "guarantee_expire_purchase",
       "args": {},
-      "journal": ["timestamp", "event", "variables"],
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
       "description": "Дедлайн прошёл, минимум не собран; заявки отменяются"
     },
     {
       "id": "tr_launch_from_collecting",
       "from": "collecting",
       "to": "launched",
-      "on": { "event": "PurchaseLaunched" },
+      "on": {
+        "event": "PurchaseLaunched"
+      },
       "role": "organizer",
       "condition": {
         "all": [
-          { "field": "collected", "op": ">=", "value": "${min_total}" },
-          { "field": "delivery_covered", "op": "==", "value": true }
+          {
+            "field": "collected",
+            "op": ">=",
+            "value": "${min_total}"
+          },
+          {
+            "field": "delivery_covered",
+            "op": "==",
+            "value": true
+          }
         ]
       },
       "action": "guarantee_launch_purchase",
       "args": {},
-      "journal": ["timestamp", "actor", "event"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Досрочный запуск организатором при выполненных условиях"
     },
     {
       "id": "tr_launch_from_ready",
       "from": "ready",
       "to": "launched",
-      "on": { "event": "PurchaseLaunched" },
+      "on": {
+        "event": "PurchaseLaunched"
+      },
       "role": "organizer",
       "condition": {
-        "all": [{ "field": "delivery_covered", "op": "==", "value": true }]
+        "all": [
+          {
+            "field": "delivery_covered",
+            "op": "==",
+            "value": true
+          }
+        ]
       },
       "action": "guarantee_launch_purchase",
       "args": {},
-      "journal": ["timestamp", "actor", "event"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Запуск после достижения минимума"
     },
     {
       "id": "tr_cancel_collecting",
       "from": "collecting",
       "to": "cancelled",
-      "on": { "event": "PurchaseCancelled" },
+      "on": {
+        "event": "PurchaseCancelled"
+      },
       "role": "organizer",
       "action": "guarantee_cancel_purchase",
       "args": {},
-      "journal": ["timestamp", "actor", "event"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Отмена на этапе сбора"
     },
     {
       "id": "tr_cancel_ready",
       "from": "ready",
       "to": "cancelled",
-      "on": { "event": "PurchaseCancelled" },
+      "on": {
+        "event": "PurchaseCancelled"
+      },
       "role": "organizer",
       "action": "guarantee_cancel_purchase",
       "args": {},
-      "journal": ["timestamp", "actor", "event"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "event"
+      ],
       "description": "Отмена после достижения минимума"
     },
     {
       "id": "tr_launch_failed_collecting",
       "from": "collecting",
       "to": "failed",
-      "on": { "event": "PurchaseLaunchFailed" },
-      "journal": ["timestamp", "event", "variables"],
+      "on": {
+        "event": "PurchaseLaunchFailed"
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
       "description": "Запуск провалился на этапе сбора"
     },
     {
       "id": "tr_launch_failed_ready",
       "from": "ready",
       "to": "failed",
-      "on": { "event": "PurchaseLaunchFailed" },
-      "journal": ["timestamp", "event", "variables"],
+      "on": {
+        "event": "PurchaseLaunchFailed"
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
       "description": "Запуск провалился после достижения минимума"
     }
   ],
@@ -271,49 +429,120 @@
   ],
   "agent": {
     "knowledgeSources": [],
-    "allowedStates": ["collecting", "ready"],
-    "stopConditions": ["нет данных о сумме заявок"],
-    "deny": ["guarantee_launch_purchase", "guarantee_cancel_purchase"]
+    "allowedStates": [
+      "collecting",
+      "ready"
+    ],
+    "stopConditions": [
+      "нет данных о сумме заявок"
+    ],
+    "deny": [
+      "guarantee_launch_purchase",
+      "guarantee_cancel_purchase"
+    ]
   },
   "tests": [
     {
       "id": "t_ready_on_minimum",
       "description": "Минимум собран — переход в ready",
-      "given": { "collected": 60000, "min_total": 50000, "delivery_covered": true },
-      "when": [{ "event": "PurchaseCreated" }, { "timer": "timer_join_deadline" }],
-      "then": { "state": "ready", "status": "active" }
+      "given": {
+        "collected": 60000,
+        "min_total": 50000,
+        "delivery_covered": true
+      },
+      "when": [
+        {
+          "event": "PurchaseCreated"
+        },
+        {
+          "timer": "timer_join_deadline"
+        }
+      ],
+      "then": {
+        "state": "ready",
+        "status": "active"
+      }
     },
     {
       "id": "t_expire_below_minimum",
       "description": "Минимум не собран — переход в expired",
-      "given": { "collected": 1000, "min_total": 50000, "delivery_covered": true },
-      "when": [{ "event": "PurchaseCreated" }, { "timer": "timer_join_deadline" }],
-      "then": { "state": "expired", "status": "completed" }
+      "given": {
+        "collected": 1000,
+        "min_total": 50000,
+        "delivery_covered": true
+      },
+      "when": [
+        {
+          "event": "PurchaseCreated"
+        },
+        {
+          "timer": "timer_join_deadline"
+        }
+      ],
+      "then": {
+        "state": "expired",
+        "status": "completed"
+      }
     },
     {
       "id": "t_launch_from_ready",
       "description": "Организатор запускает после минимума",
-      "given": { "collected": 60000, "min_total": 50000, "delivery_covered": true },
+      "given": {
+        "collected": 60000,
+        "min_total": 50000,
+        "delivery_covered": true
+      },
       "when": [
-        { "event": "PurchaseCreated" },
-        { "timer": "timer_join_deadline" },
-        { "event": "PurchaseLaunched", "actor": "user-1" }
+        {
+          "event": "PurchaseCreated"
+        },
+        {
+          "timer": "timer_join_deadline"
+        },
+        {
+          "event": "PurchaseLaunched",
+          "actor": "user-1"
+        }
       ],
-      "then": { "state": "launched", "status": "completed" }
+      "then": {
+        "state": "launched",
+        "status": "completed"
+      }
     },
     {
       "id": "t_launch_failure",
       "description": "Ошибка запуска уводит процесс в failed",
-      "given": { "collected": 60000, "min_total": 50000, "delivery_covered": true },
+      "given": {
+        "collected": 60000,
+        "min_total": 50000,
+        "delivery_covered": true
+      },
       "when": [
-        { "event": "PurchaseCreated" },
-        { "timer": "timer_join_deadline" },
-        { "event": "PurchaseLaunchFailed", "actor": "system" }
+        {
+          "event": "PurchaseCreated"
+        },
+        {
+          "timer": "timer_join_deadline"
+        },
+        {
+          "event": "PurchaseLaunchFailed",
+          "actor": "system"
+        }
       ],
-      "then": { "state": "failed", "status": "completed" }
+      "then": {
+        "state": "failed",
+        "status": "completed"
+      }
     }
   ],
   "audit": {
-    "include": ["actor", "decision", "timestamp", "event", "action", "variables"]
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event",
+      "action",
+      "variables"
+    ]
   }
 }
