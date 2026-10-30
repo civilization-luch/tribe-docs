@@ -3,7 +3,7 @@
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение, затем сопровождение сделок участников до их закрытия.",
-  "version": "2026-10-30.2",
+  "version": "2026-10-30.7",
   "contextType": "ge_purchase",
   "host": {
     "module": "guarantee"
@@ -383,7 +383,7 @@
     {
       "id": "tr_no_deals",
       "from": "launched",
-      "to": "closed",
+      "to": "after_deals",
       "condition": {
         "all": [
           {
@@ -398,88 +398,59 @@
         "event",
         "variables"
       ],
-      "description": "Закрываем закупку: все сделки уже закрыты на момент запуска",
-      "actions": [
-        {
-          "action": "guarantee_close_purchase",
-          "args": {
-            "purchase_id": "${context_id}"
-          }
-        }
-      ],
-      "label": "сделок нет"
+      "description": "Запуск без сделок: сразу проверяем и закрываем",
+      "label": "нет сделок"
     },
     {
       "id": "tr_deals_completed",
       "from": "launched",
-      "to": "closed",
+      "to": "after_deals",
       "on": {
         "event": "DealCompleted"
-      },
-      "condition": {
-        "all": [
-          {
-            "field": "deals_open",
-            "op": "==",
-            "value": 0
-          }
-        ]
       },
       "journal": [
         "timestamp",
         "event",
         "variables"
       ],
-      "description": "Закрываем закупку: сделка завершена",
-      "actions": [
-        {
-          "action": "guarantee_close_purchase",
-          "args": {
-            "purchase_id": "${context_id}"
-          }
-        }
-      ],
-      "label": "сделка завершена"
+      "description": "Событие сделки: проверяем, остались ли открытые сделки",
+      "label": "событие по сделке"
     },
     {
       "id": "tr_deals_cancelled",
       "from": "launched",
-      "to": "closed",
+      "to": "after_deals",
       "on": {
         "event": "DealCancelled"
-      },
-      "condition": {
-        "all": [
-          {
-            "field": "deals_open",
-            "op": "==",
-            "value": 0
-          }
-        ]
       },
       "journal": [
         "timestamp",
         "event",
         "variables"
       ],
-      "description": "Закрываем закупку: сделка отменена",
-      "actions": [
-        {
-          "action": "guarantee_close_purchase",
-          "args": {
-            "purchase_id": "${context_id}"
-          }
-        }
-      ],
-      "label": "сделка отменена"
+      "description": "Событие сделки: проверяем, остались ли открытые сделки",
+      "label": "событие по сделке"
     },
     {
       "id": "tr_deals_resolved",
       "from": "launched",
-      "to": "closed",
+      "to": "after_deals",
       "on": {
         "event": "DealResolved"
       },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Событие сделки: проверяем, остались ли открытые сделки",
+      "label": "событие по сделке"
+    },
+    {
+      "id": "tr_deals_all_closed",
+      "from": "after_deals",
+      "to": "closed",
+      "label": "все закрыты",
       "condition": {
         "all": [
           {
@@ -489,12 +460,6 @@
           }
         ]
       },
-      "journal": [
-        "timestamp",
-        "event",
-        "variables"
-      ],
-      "description": "Закрываем закупку: спор по сделке разрешён",
       "actions": [
         {
           "action": "guarantee_close_purchase",
@@ -503,7 +468,33 @@
           }
         }
       ],
-      "label": "спор решён"
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Открытых сделок не осталось — закупка закрывается"
+    },
+    {
+      "id": "tr_deals_still_open",
+      "from": "after_deals",
+      "to": "launched",
+      "label": "ещё в работе",
+      "condition": {
+        "all": [
+          {
+            "field": "deals_open",
+            "op": ">",
+            "value": 0
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event",
+        "variables"
+      ],
+      "description": "Открытые сделки ещё есть — остаёмся в исполнении"
     }
   ],
   "timers": [
@@ -686,6 +677,10 @@
     "after_deadline": {
       "type": "exclusive",
       "name": "Дедлайн сбора прошёл"
+    },
+    "after_deals": {
+      "type": "exclusive",
+      "name": "Все сделки закрыты?"
     }
   }
 }
