@@ -12,6 +12,7 @@
     "PurchaseReady",
     "PurchaseExpired",
     "PurchaseLaunched",
+    "PurchaseLaunchFailed",
     "PurchaseCancelled"
   ],
   "states": {
@@ -49,6 +50,12 @@
       "type": "end_event",
       "name": "Отменено",
       "description": "Отменено организатором; заявки и сделки отменены",
+      "final": true
+    },
+    "failed": {
+      "type": "end_event",
+      "name": "Ошибка запуска",
+      "description": "Запуск не удался: сделки не созданы. Требуется разбор человеком",
       "final": true
     }
   },
@@ -138,6 +145,20 @@
       "action": "guarantee_cancel_purchase",
       "args": {},
       "description": "Отмена после достижения минимума"
+    },
+    {
+      "id": "tr_launch_failed_collecting",
+      "from": "collecting",
+      "to": "failed",
+      "on": { "event": "PurchaseLaunchFailed" },
+      "description": "Запуск провалился на этапе сбора"
+    },
+    {
+      "id": "tr_launch_failed_ready",
+      "from": "ready",
+      "to": "failed",
+      "on": { "event": "PurchaseLaunchFailed" },
+      "description": "Запуск провалился после достижения минимума"
     }
   ],
   "timers": [
@@ -183,6 +204,18 @@
       "from": "launched",
       "to": "ready",
       "reason": "Запуск необратим в рамках этого процесса"
+    },
+    {
+      "id": "deny_failed_reopen",
+      "from": "failed",
+      "to": "collecting",
+      "reason": "После ошибки запуска процесс закрыт; нужен новый экземпляр"
+    },
+    {
+      "id": "deny_failed_launch",
+      "from": "failed",
+      "to": "launched",
+      "reason": "Ошибочный запуск не считается успешным"
     }
   ],
   "audit": {
