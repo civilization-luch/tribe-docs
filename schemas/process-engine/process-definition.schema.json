@@ -205,6 +205,14 @@
         "scopeField": {
           "type": "string",
           "description": "Поле объекта процесса, задающее группу для проверки capability"
+        },
+        "assigneeField": {
+          "type": "string",
+          "description": "Поле объекта процесса с id пользователя-исполнителя"
+        },
+        "groupSetting": {
+          "type": "string",
+          "description": "Ключ настройки сообщества, в которой лежит id группы-исполнителя"
         }
       }
     },
