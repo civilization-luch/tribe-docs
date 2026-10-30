@@ -9,7 +9,8 @@
     "module": null,
     "stateMap": {
       "applicant": "review"
-    }
+    },
+    "contextUrl": "/community/{community}/members/{user_id}"
   },
   "passport": {
     "owner": "admin",

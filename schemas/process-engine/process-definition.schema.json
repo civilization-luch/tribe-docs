@@ -197,6 +197,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "capability": {
+          "type": "string",
+          "description": "Capability, дающая роль: проверяется через групповые права"
+        },
+        "scopeField": {
+          "type": "string",
+          "description": "Поле объекта процесса, задающее группу для проверки capability"
         }
       }
     },
@@ -739,6 +747,10 @@
             "type": "string"
           },
           "description": "Соответствие статуса доменного объекта состоянию процесса — для переноса существующих объектов"
+        },
+        "contextUrl": {
+          "type": "string",
+          "description": "Шаблон ссылки на объект процесса: {community} — slug сообщества, {id} — id объекта, {поле} — атрибут объекта"
         }
       }
     }

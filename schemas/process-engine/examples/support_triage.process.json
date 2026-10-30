@@ -9,28 +9,40 @@
     "module": "support",
     "stateMap": {
       "new": "triage"
-    }
+    },
+    "contextUrl": "/community/{community}/support/{id}"
   },
   "passport": {
-    "owner": "admin",
+    "owner": "support_agent",
     "goal": "Разобрать новое обращение: принять в работу или отклонить",
     "startsWhen": "обращение создано",
     "endsWhen": "обращение принято в работу или отклонено",
-    "inScope": ["первичный разбор обращения"],
-    "outOfScope": ["переписка с заявителем", "решение по существу"]
+    "inScope": [
+      "первичный разбор обращения"
+    ],
+    "outOfScope": [
+      "переписка с заявителем",
+      "решение по существу"
+    ]
   },
   "roles": [
     {
-      "id": "admin",
-      "name": "Администратор поддержки",
+      "id": "support_agent",
+      "name": "Агент поддержки",
       "kind": "human",
-      "responsibilities": ["разбор обращений"]
+      "responsibilities": [
+        "разбор обращений"
+      ],
+      "capability": "support.handle",
+      "scopeField": "target_group_id"
     },
     {
       "id": "requester",
       "name": "Заявитель",
       "kind": "human",
-      "responsibilities": ["подача обращения"]
+      "responsibilities": [
+        "подача обращения"
+      ]
     }
   ],
   "data": [],
@@ -44,10 +56,12 @@
       "type": "user_task",
       "name": "Разбор обращения",
       "description": "Принять обращение в работу или отклонить",
-      "assignedRole": "admin",
+      "assignedRole": "support_agent",
       "slaHours": 8,
       "reminderHours": 4,
-      "workDistribution": { "performedBy": "human" }
+      "workDistribution": {
+        "performedBy": "human"
+      }
     },
     "triaged": {
       "type": "end_event",
@@ -68,36 +82,55 @@
       "id": "tr_created",
       "from": "__start__",
       "to": "triage",
-      "on": { "event": "SupportRequestCreated" },
-      "journal": ["timestamp", "event"],
+      "on": {
+        "event": "SupportRequestCreated"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
       "description": "Новое обращение поступило на разбор"
     },
     {
       "id": "tr_accept",
       "from": "triage",
       "to": "triaged",
-      "on": { "decision": "accept" },
+      "on": {
+        "decision": "accept"
+      },
       "action": "support_change_status",
       "args": {
         "request_id": "${context_id}",
         "status": "triaged",
         "via_process": true
       },
-      "journal": ["timestamp", "actor", "decision", "action"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
       "description": "Принять обращение в работу"
     },
     {
       "id": "tr_decline",
       "from": "triage",
       "to": "declined",
-      "on": { "decision": "decline" },
+      "on": {
+        "decision": "decline"
+      },
       "action": "support_change_status",
       "args": {
         "request_id": "${context_id}",
         "status": "declined",
         "via_process": true
       },
-      "journal": ["timestamp", "actor", "decision", "action"],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
       "description": "Отклонить обращение"
     }
   ],
@@ -108,23 +141,52 @@
       "description": "Принятие переводит обращение в triaged",
       "given": {},
       "when": [
-        { "event": "SupportRequestCreated", "aggregate_id": "request-1", "payload": { "title": "Не работает вход" } },
-        { "decision": "accept", "actor": "admin-1" }
+        {
+          "event": "SupportRequestCreated",
+          "aggregate_id": "request-1",
+          "payload": {
+            "title": "Не работает вход"
+          }
+        },
+        {
+          "decision": "accept",
+          "actor": "admin-1"
+        }
       ],
-      "then": { "state": "triaged", "status": "completed" }
+      "then": {
+        "state": "triaged",
+        "status": "completed"
+      }
     },
     {
       "id": "t_decline",
       "description": "Отклонение переводит обращение в declined",
       "given": {},
       "when": [
-        { "event": "SupportRequestCreated", "aggregate_id": "request-1", "payload": { "title": "Не работает вход" } },
-        { "decision": "decline", "actor": "admin-1" }
+        {
+          "event": "SupportRequestCreated",
+          "aggregate_id": "request-1",
+          "payload": {
+            "title": "Не работает вход"
+          }
+        },
+        {
+          "decision": "decline",
+          "actor": "admin-1"
+        }
       ],
-      "then": { "state": "declined", "status": "completed" }
+      "then": {
+        "state": "declined",
+        "status": "completed"
+      }
     }
   ],
   "audit": {
-    "include": ["actor", "decision", "timestamp", "event"]
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event"
+    ]
   }
 }
