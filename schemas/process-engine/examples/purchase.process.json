@@ -3,7 +3,7 @@
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение, затем сопровождение сделок участников до их закрытия.",
-  "version": "2026-10-30",
+  "version": "2026-10-30.2",
   "contextType": "ge_purchase",
   "host": {
     "module": "guarantee"
@@ -143,19 +143,21 @@
     },
     "ready": {
       "type": "wait",
-      "name": "Минимум собран",
-      "description": "Дедлайн прошёл и сумма заявок достигла min_total; ждём запуска организатором",
+      "name": "Набрано, ждём запуска",
+      "description": "Минимум собран; организатор должен запустить закупку или отменить её",
       "workDistribution": {
         "performedBy": "system"
-      }
+      },
+      "assignedRole": "organizer"
     },
     "launched": {
       "type": "wait",
-      "name": "Запущено",
+      "name": "Исполнение сделок",
       "description": "Сделки созданы; ждём, пока участники и поставщик закроют их — завершением, отменой или спором",
       "workDistribution": {
         "performedBy": "system"
-      }
+      },
+      "assignedRole": "member"
     },
     "expired": {
       "type": "end_event",
@@ -174,15 +176,6 @@
       "workDistribution": {
         "performedBy": "human",
         "approvalRequired": true
-      }
-    },
-    "failed": {
-      "type": "end_event",
-      "name": "Ошибка запуска",
-      "description": "Запуск не удался: сделки не созданы. Требуется разбор человеком",
-      "final": true,
-      "workDistribution": {
-        "performedBy": "human"
       }
     },
     "closed": {
@@ -208,7 +201,8 @@
         "actor",
         "event"
       ],
-      "description": "Старт процесса при создании закупки"
+      "description": "Старт процесса при создании закупки",
+      "label": "создание"
     },
     {
       "id": "tr_ready",
@@ -225,7 +219,8 @@
       "description": "Дедлайн прошёл — решаем по сумме",
       "on": {
         "timer": "timer_join_deadline"
-      }
+      },
+      "label": "дедлайн"
     },
     {
       "id": "tr_launch_from_collecting",
@@ -248,7 +243,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "запуск"
     },
     {
       "id": "tr_launch_from_ready",
@@ -271,7 +267,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "запуск"
     },
     {
       "id": "tr_cancel_collecting",
@@ -294,7 +291,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "отмена"
     },
     {
       "id": "tr_cancel_ready",
@@ -317,35 +315,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
-    },
-    {
-      "id": "tr_launch_failed_collecting",
-      "from": "collecting",
-      "to": "failed",
-      "on": {
-        "event": "PurchaseLaunchFailed"
-      },
-      "journal": [
-        "timestamp",
-        "event",
-        "variables"
       ],
-      "description": "Запуск провалился на этапе сбора"
-    },
-    {
-      "id": "tr_launch_failed_ready",
-      "from": "ready",
-      "to": "failed",
-      "on": {
-        "event": "PurchaseLaunchFailed"
-      },
-      "journal": [
-        "timestamp",
-        "event",
-        "variables"
-      ],
-      "description": "Запуск провалился после достижения минимума"
+      "label": "отмена"
     },
     {
       "id": "tr_ready_flow",
@@ -375,7 +346,8 @@
         "timestamp",
         "event",
         "variables"
-      ]
+      ],
+      "label": "сумма ≥ минимума"
     },
     {
       "id": "tr_expire_flow",
@@ -405,7 +377,8 @@
         "timestamp",
         "event",
         "variables"
-      ]
+      ],
+      "label": "сумма < минимума"
     },
     {
       "id": "tr_no_deals",
@@ -433,7 +406,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "сделок нет"
     },
     {
       "id": "tr_deals_completed",
@@ -464,7 +438,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "сделка завершена"
     },
     {
       "id": "tr_deals_cancelled",
@@ -495,7 +470,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "сделка отменена"
     },
     {
       "id": "tr_deals_resolved",
@@ -526,7 +502,8 @@
             "purchase_id": "${context_id}"
           }
         }
-      ]
+      ],
+      "label": "спор решён"
     }
   ],
   "timers": [
@@ -572,18 +549,6 @@
       "from": "launched",
       "to": "ready",
       "reason": "Запуск необратим в рамках этого процесса"
-    },
-    {
-      "id": "deny_failed_reopen",
-      "from": "failed",
-      "to": "collecting",
-      "reason": "После ошибки запуска процесс закрыт; нужен новый экземпляр"
-    },
-    {
-      "id": "deny_failed_launch",
-      "from": "failed",
-      "to": "launched",
-      "reason": "Ошибочный запуск не считается успешным"
     },
     {
       "id": "deny_closed_back",
@@ -676,31 +641,6 @@
       }
     },
     {
-      "id": "t_launch_failure",
-      "description": "Ошибка запуска уводит процесс в failed",
-      "given": {
-        "collected": 60000,
-        "min_total": 50000,
-        "delivery_covered": true
-      },
-      "when": [
-        {
-          "event": "PurchaseCreated"
-        },
-        {
-          "timer": "timer_join_deadline"
-        },
-        {
-          "event": "PurchaseLaunchFailed",
-          "actor": "system"
-        }
-      ],
-      "then": {
-        "state": "failed",
-        "status": "completed"
-      }
-    },
-    {
       "id": "t_closed_when_deals_done",
       "description": "Все сделки закрыты — закупка закрывается",
       "given": {
@@ -744,7 +684,8 @@
   },
   "gateways": {
     "after_deadline": {
-      "type": "exclusive"
+      "type": "exclusive",
+      "name": "Дедлайн сбора прошёл"
     }
   }
 }

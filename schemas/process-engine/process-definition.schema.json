@@ -406,6 +406,10 @@
             "parallel_join"
           ]
         },
+        "name": {
+          "type": "string",
+          "description": "Человеческая подпись развилки на диаграмме"
+        },
         "targets": {
           "type": "array",
           "items": {
@@ -470,6 +474,10 @@
         },
         "description": {
           "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "description": "Короткая подпись ветки на диаграмме"
         },
         "notify": {
           "type": "array",

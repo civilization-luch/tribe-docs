@@ -3,7 +3,7 @@
   "id": "guarantee.deal",
   "name": "Сделка под гарантию",
   "description": "Исполнение одной сделки: поставщик принимает покрытие и блокирует депозиты, затем сделка идёт до завершения, отмены или спора. Закупка ведёт столько сделок, сколько участников запустилось.",
-  "version": "2026-10-30",
+  "version": "2026-10-30.2",
   "contextType": "ge_deal",
   "host": {
     "module": "guarantee",
@@ -177,7 +177,8 @@
   },
   "gateways": {
     "after_confirm": {
-      "type": "exclusive"
+      "type": "exclusive",
+      "name": "Решение поставщика"
     }
   },
   "transitions": [
@@ -192,7 +193,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Сделка предложена — поставщик принимает решение"
+      "description": "Сделка предложена — поставщик принимает решение",
+      "label": "сделка предложена"
     },
     {
       "id": "tr_decide",
@@ -233,7 +235,8 @@
         "decision",
         "action"
       ],
-      "description": "Сделка принята, покрытие заблокировано"
+      "description": "Сделка принята, покрытие заблокировано",
+      "label": "принять"
     },
     {
       "id": "tr_decline",
@@ -264,7 +267,8 @@
         "decision",
         "action"
       ],
-      "description": "Сделка отклонена, покрытие освобождено"
+      "description": "Сделка отклонена, покрытие освобождено",
+      "label": "отклонить"
     },
     {
       "id": "tr_completed",
@@ -286,7 +290,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Исполнение подтверждено"
+      "description": "Исполнение подтверждено",
+      "label": "исполнено"
     },
     {
       "id": "tr_disputed",
@@ -308,7 +313,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Открыт спор по сделке"
+      "description": "Открыт спор по сделке",
+      "label": "открыт спор"
     },
     {
       "id": "tr_cancelled",
@@ -330,7 +336,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Сделка отменена до исполнения"
+      "description": "Сделка отменена до исполнения",
+      "label": "отмена"
     },
     {
       "id": "tr_resolved",
@@ -352,7 +359,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Спор разрешён"
+      "description": "Спор разрешён",
+      "label": "спор решён"
     },
     {
       "id": "tr_cancelled_in_dispute",
@@ -374,7 +382,8 @@
         "timestamp",
         "event"
       ],
-      "description": "Сделка отменена во время спора"
+      "description": "Сделка отменена во время спора",
+      "label": "отмена в споре"
     }
   ],
   "forbidden": [
