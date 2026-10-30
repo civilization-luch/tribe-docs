@@ -38,6 +38,9 @@
     "contextType": {
       "type": "string"
     },
+    "host": {
+      "$ref": "#/$defs/host"
+    },
     "passport": {
       "$ref": "#/$defs/passport"
     },
@@ -716,6 +719,26 @@
         },
         "link": {
           "type": "string"
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "module": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Модуль-хозяин: процесс работает только при включённом модуле. null — процесс уровня сообщества"
+        },
+        "stateMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Соответствие статуса доменного объекта состоянию процесса — для переноса существующих объектов"
         }
       }
     }

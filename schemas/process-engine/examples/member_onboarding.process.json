@@ -5,6 +5,12 @@
   "description": "Заявка на вступление в сообщество: проверка администратором, развилка решения, одобрение, отказ или сгорание по SLA. Простой пример процесса для знакомства с движком.",
   "version": "2026-10-30",
   "contextType": "member",
+  "host": {
+    "module": null,
+    "stateMap": {
+      "applicant": "review"
+    }
+  },
   "passport": {
     "owner": "admin",
     "goal": "Принять или отклонить заявку на вступление",
@@ -141,7 +147,8 @@
       },
       "action": "membership_approve",
       "args": {
-        "member_id": "${context_id}"
+        "member_id": "${context_id}",
+        "via_process": true
       },
       "journal": [
         "timestamp",
@@ -173,7 +180,8 @@
       },
       "action": "membership_remove",
       "args": {
-        "member_id": "${context_id}"
+        "member_id": "${context_id}",
+        "via_process": true
       },
       "journal": [
         "timestamp",
