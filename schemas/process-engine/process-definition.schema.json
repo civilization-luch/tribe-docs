@@ -275,6 +275,7 @@
         "decision": { "type": "string", "minLength": 1 },
         "timer": { "$ref": "#/$defs/id" },
         "actor": { "type": "string" },
+        "aggregate_id": { "type": "string" },
         "payload": { "type": "object" }
       }
     },

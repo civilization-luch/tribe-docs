@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "0.2",
+  "id": "membership.onboarding",
+  "name": "Онбординг участника",
+  "description": "Заявка на вступление в сообщество: проверка администратором, одобрение или отказ. Простой пример процесса для знакомства с движком.",
+  "version": "2026-10-30",
+  "contextType": "member",
+  "passport": {
+    "owner": "admin",
+    "goal": "Принять или отклонить заявку на вступление",
+    "startsWhen": "участник подал заявку",
+    "endsWhen": "заявка одобрена или отклонена",
+    "inScope": ["рассмотрение заявки"],
+    "outOfScope": ["онбординг после принятия"],
+    "successMetrics": [
+      { "name": "время рассмотрения", "target": "<= 24 ч", "unit": "часы" }
+    ]
+  },
+  "roles": [
+    {
+      "id": "admin",
+      "name": "Администратор",
+      "kind": "human",
+      "responsibilities": ["рассмотрение заявки"]
+    },
+    {
+      "id": "applicant",
+      "name": "Заявитель",
+      "kind": "human",
+      "responsibilities": ["подача заявки"]
+    }
+  ],
+  "data": [],
+  "rules": [],
+  "states": {
+    "__start__": {
+      "type": "start_event",
+      "description": "Заявка подана"
+    },
+    "review": {
+      "type": "user_task",
+      "name": "Проверка заявки",
+      "description": "Администратор решает, принять участника или отказать",
+      "assignedRole": "admin",
+      "slaHours": 24,
+      "workDistribution": { "performedBy": "human", "approvalRequired": true }
+    },
+    "approved": {
+      "type": "end_event",
+      "name": "Одобрено",
+      "description": "Участник принят в сообщество",
+      "final": true
+    },
+    "rejected": {
+      "type": "end_event",
+      "name": "Отклонено",
+      "description": "Заявка отклонена",
+      "final": true
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_apply",
+      "from": "__start__",
+      "to": "review",
+      "on": { "event": "MemberJoined" },
+      "journal": ["timestamp", "actor", "event"],
+      "description": "Заявка поступила на рассмотрение"
+    },
+    {
+      "id": "tr_approve",
+      "from": "review",
+      "to": "approved",
+      "on": { "decision": "approve" },
+      "role": "admin",
+      "action": "membership_approve",
+      "args": { "member_id": "${event.aggregate_id}" },
+      "journal": ["timestamp", "actor", "decision"],
+      "description": "Администратор одобрил заявку"
+    },
+    {
+      "id": "tr_reject",
+      "from": "review",
+      "to": "rejected",
+      "on": { "decision": "reject" },
+      "role": "admin",
+      "action": "membership_remove",
+      "args": { "member_id": "${event.aggregate_id}" },
+      "journal": ["timestamp", "actor", "decision"],
+      "description": "Администратор отклонил заявку"
+    }
+  ],
+  "tests": [
+    {
+      "id": "t_approve",
+      "description": "Одобрение ведёт в approved",
+      "given": {},
+      "when": [
+        { "event": "MemberJoined", "aggregate_id": "member-1" },
+        { "decision": "approve", "actor": "admin-1" }
+      ],
+      "then": { "state": "approved", "status": "completed" }
+    },
+    {
+      "id": "t_reject",
+      "description": "Отказ ведёт в rejected",
+      "given": {},
+      "when": [
+        { "event": "MemberJoined", "aggregate_id": "member-1" },
+        { "decision": "reject", "actor": "admin-1" }
+      ],
+      "then": { "state": "rejected", "status": "completed" }
+    }
+  ],
+  "audit": {
+    "include": ["actor", "decision", "timestamp", "event"]
+  }
+}
