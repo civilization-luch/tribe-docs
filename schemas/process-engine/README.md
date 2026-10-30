@@ -29,7 +29,7 @@ schemas/process-engine/
 | Состояние | `states[id]` | `start_event`, `end_event`, `wait`, `automated_task`, `user_task` |
 | Переход | `transitions[]` | `from` → `to`, триггер в `on` (`event`, `decision`, `timer`) |
 | Условие | `condition` | `all` / `any` из клауз `{field, op, value}` |
-| Таймер | `timers[]` | дедлайн в состоянии и ветки по условию |
+| Таймер | `timers[]` | дедлайн в состоянии; ветки задаются переходами с `on.timer` |
 | Запрет | `forbidden[]` | явный запрет перехода с причиной |
 | Роль | `role` | кто может инициировать переход |
 | Действие | `action` + `args` | имя команды, исполняется через `CommandSink` |

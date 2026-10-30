@@ -128,7 +128,7 @@
     },
     "timer": {
       "type": "object",
-      "required": ["id", "state", "at", "branches"],
+      "required": ["id", "state", "at"],
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/$defs/id" },
@@ -137,21 +137,6 @@
           "type": "string",
           "minLength": 1,
           "description": "ISO-8601 datetime or ${var} reference resolved at runtime"
-        },
-        "branches": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "required": ["to"],
-            "additionalProperties": false,
-            "properties": {
-              "condition": { "$ref": "#/$defs/condition" },
-              "to": { "type": "string", "minLength": 1 },
-              "action": { "type": "string" },
-              "args": { "type": "object" }
-            }
-          }
         }
       }
     },

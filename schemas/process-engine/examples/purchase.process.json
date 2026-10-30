@@ -144,20 +144,7 @@
     {
       "id": "timer_join_deadline",
       "state": "collecting",
-      "at": "${purchase.join_deadline}",
-      "branches": [
-        {
-          "condition": {
-            "all": [
-              { "field": "collected", "op": ">=", "value": "${purchase.min_total}" }
-            ]
-          },
-          "to": "ready"
-        },
-        {
-          "to": "expired"
-        }
-      ]
+      "at": "${purchase.join_deadline}"
     }
   ],
   "forbidden": [
