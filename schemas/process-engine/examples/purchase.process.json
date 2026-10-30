@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "0.1",
+  "id": "guarantee.purchase",
+  "name": "Закупка (Purchase)",
+  "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение. Соответствует агрегату ge_purchase.",
+  "version": "2026-10-30",
+  "contextType": "ge_purchase",
+  "roles": ["organizer", "member", "system"],
+  "events": [
+    "PurchaseCreated",
+    "ApplicationSubmitted",
+    "PurchaseReady",
+    "PurchaseExpired",
+    "PurchaseLaunched",
+    "PurchaseCancelled"
+  ],
+  "states": {
+    "__start__": {
+      "type": "start_event",
+      "description": "Закупка создана организатором"
+    },
+    "collecting": {
+      "type": "wait",
+      "name": "Сбор заявок",
+      "description": "Принимаются заявки участников до join_deadline",
+      "action": "guarantee_refresh_purchase_totals",
+      "args": {}
+    },
+    "ready": {
+      "type": "wait",
+      "name": "Минимум собран",
+      "description": "Дедлайн прошёл и сумма заявок достигла min_total; ждём запуска организатором",
+      "action": "guarantee_refresh_purchase_totals",
+      "args": {}
+    },
+    "launched": {
+      "type": "end_event",
+      "name": "Запущено",
+      "description": "Созданы сделки по заявкам; исполнение сделок — отдельный процесс",
+      "final": true
+    },
+    "expired": {
+      "type": "end_event",
+      "name": "Истекло",
+      "description": "Дедлайн прошёл, минимум не собран; все заявки отменены",
+      "final": true
+    },
+    "cancelled": {
+      "type": "end_event",
+      "name": "Отменено",
+      "description": "Отменено организатором; заявки и сделки отменены",
+      "final": true
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_created",
+      "from": "__start__",
+      "to": "collecting",
+      "on": { "event": "PurchaseCreated" },
+      "description": "Старт процесса при создании закупки"
+    },
+    {
+      "id": "tr_ready",
+      "from": "collecting",
+      "to": "ready",
+      "on": { "timer": "timer_join_deadline" },
+      "condition": {
+        "all": [
+          { "field": "collected", "op": ">=", "value": "${purchase.min_total}" }
+        ]
+      },
+      "action": "guarantee_mark_purchase_ready",
+      "args": {},
+      "description": "Дедлайн прошёл, минимум собран"
+    },
+    {
+      "id": "tr_expire",
+      "from": "collecting",
+      "to": "expired",
+      "on": { "timer": "timer_join_deadline" },
+      "condition": {
+        "all": [
+          { "field": "collected", "op": "<", "value": "${purchase.min_total}" }
+        ]
+      },
+      "action": "guarantee_expire_purchase",
+      "args": {},
+      "description": "Дедлайн прошёл, минимум не собран; заявки отменяются"
+    },
+    {
+      "id": "tr_launch_from_collecting",
+      "from": "collecting",
+      "to": "launched",
+      "on": { "event": "PurchaseLaunched" },
+      "role": "organizer",
+      "condition": {
+        "all": [
+          { "field": "collected", "op": ">=", "value": "${purchase.min_total}" },
+          { "field": "delivery_covered", "op": "==", "value": true }
+        ]
+      },
+      "action": "guarantee_launch_purchase",
+      "args": {},
+      "description": "Досрочный запуск организатором при выполненных условиях"
+    },
+    {
+      "id": "tr_launch_from_ready",
+      "from": "ready",
+      "to": "launched",
+      "on": { "event": "PurchaseLaunched" },
+      "role": "organizer",
+      "condition": {
+        "all": [
+          { "field": "delivery_covered", "op": "==", "value": true }
+        ]
+      },
+      "action": "guarantee_launch_purchase",
+      "args": {},
+      "description": "Запуск после достижения минимума"
+    },
+    {
+      "id": "tr_cancel_collecting",
+      "from": "collecting",
+      "to": "cancelled",
+      "on": { "event": "PurchaseCancelled" },
+      "role": "organizer",
+      "action": "guarantee_cancel_purchase",
+      "args": {},
+      "description": "Отмена на этапе сбора"
+    },
+    {
+      "id": "tr_cancel_ready",
+      "from": "ready",
+      "to": "cancelled",
+      "on": { "event": "PurchaseCancelled" },
+      "role": "organizer",
+      "action": "guarantee_cancel_purchase",
+      "args": {},
+      "description": "Отмена после достижения минимума"
+    }
+  ],
+  "timers": [
+    {
+      "id": "timer_join_deadline",
+      "state": "collecting",
+      "at": "${purchase.join_deadline}",
+      "branches": [
+        {
+          "condition": {
+            "all": [
+              { "field": "collected", "op": ">=", "value": "${purchase.min_total}" }
+            ]
+          },
+          "to": "ready"
+        },
+        {
+          "to": "expired"
+        }
+      ]
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "deny_expired_reopen",
+      "from": "expired",
+      "to": "collecting",
+      "reason": "Дедлайн прошёл, сбор заявок закрыт безвозвратно"
+    },
+    {
+      "id": "deny_expired_launch",
+      "from": "expired",
+      "to": "launched",
+      "reason": "Нельзя запустить закупку, у которой истёк срок и не собран минимум"
+    },
+    {
+      "id": "deny_cancelled_reopen",
+      "from": "cancelled",
+      "to": "collecting",
+      "reason": "Отменённая закупка не возвращается в сбор"
+    },
+    {
+      "id": "deny_cancelled_launch",
+      "from": "cancelled",
+      "to": "launched",
+      "reason": "Отменённую закупку нельзя запустить"
+    },
+    {
+      "id": "deny_launched_back",
+      "from": "launched",
+      "to": "collecting",
+      "reason": "После запуска возврат в сбор невозможен"
+    },
+    {
+      "id": "deny_launched_ready",
+      "from": "launched",
+      "to": "ready",
+      "reason": "Запуск необратим в рамках этого процесса"
+    }
+  ],
+  "audit": {
+    "include": ["actor", "decision", "timestamp", "event", "action", "variables"]
+  }
+}
