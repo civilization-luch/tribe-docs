@@ -138,17 +138,35 @@
       "on": {
         "decision": "accept"
       },
-      "action": "support_change_status",
-      "args": {
-        "request_id": "${context_id}",
-        "status": "accepted",
-        "via_process": true
-      },
       "journal": [
         "timestamp",
         "actor",
         "decision",
         "action"
+      ],
+      "actions": [
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "accepted",
+            "via_process": true
+          }
+        },
+        {
+          "action": "support_claim_request",
+          "args": {
+            "request_id": "${context_id}"
+          }
+        },
+        {
+          "action": "support_change_status",
+          "args": {
+            "request_id": "${context_id}",
+            "status": "in_progress",
+            "via_process": true
+          }
+        }
       ]
     },
     {

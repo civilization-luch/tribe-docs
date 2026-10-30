@@ -436,6 +436,13 @@
         "action": {
           "type": "string"
         },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actionCall"
+          },
+          "description": "Последовательность команд; выполняется по порядку"
+        },
         "args": {
           "type": "object"
         },
@@ -782,6 +789,22 @@
         },
         "label": {
           "type": "string"
+        }
+      }
+    },
+    "actionCall": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "object"
         }
       }
     }
