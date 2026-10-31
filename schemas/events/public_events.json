@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "description": "Public event contract: events that processes and external consumers may rely on. Internal domain events are free to change; these names, versions and payload fields are not.",
+  "events": {
+    "MemberJoined": {
+      "module": "membership",
+      "version": 1,
+      "payload": {
+        "status": "string"
+      }
+    },
+    "SupportRequestCreated": {
+      "module": "support",
+      "version": 1,
+      "payload": {
+        "title": "string",
+        "body": "string",
+        "author_id": "string",
+        "public_status": "string"
+      }
+    },
+    "SupportRequestMessageAdded": {
+      "module": "support",
+      "version": 1,
+      "payload": {
+        "author_id": "string",
+        "body": "string"
+      }
+    },
+    "WalletDepositClaimed": {
+      "module": "wallet",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "amount": "number",
+        "currency": "string",
+        "user_id": "string"
+      }
+    },
+    "PurchaseCreated": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "title": "string",
+        "min_total": "number",
+        "join_deadline": "string",
+        "status": "string"
+      }
+    },
+    "PurchaseLaunched": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string"
+      }
+    },
+    "PurchaseCancelled": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string"
+      }
+    },
+    "DealProposed": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "amount": "number",
+        "currency": "string",
+        "status": "string",
+        "purchase_id": "string",
+        "creator_id": "string",
+        "beneficiary_id": "string"
+      }
+    },
+    "DealCompleted": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string"
+      }
+    },
+    "DealCancelled": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string"
+      }
+    },
+    "DealDisputed": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "dispute_id": "string"
+      }
+    },
+    "DealResolved": {
+      "module": "guarantee",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "resolution": "string"
+      }
+    }
+  }
+}
