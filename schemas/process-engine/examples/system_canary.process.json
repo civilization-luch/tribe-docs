@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "0.4",
+  "id": "system.canary",
+  "name": "Проверка движка",
+  "description": "Служебное определение: движок сам запускает его по расписанию и проверяет, что переходы выполняются. Ничего не пишет в базу и никого не уведомляет.",
+  "version": "2026-11-01",
+  "contextType": "system_canary",
+  "host": {
+    "module": null
+  },
+  "passport": {
+    "owner": "system",
+    "goal": "Убедиться, что движок процессов исполняет определения",
+    "startsWhen": "планировщик здоровья запускает проверку",
+    "endsWhen": "проверка дошла до финального состояния",
+    "inScope": [
+      "загрузка определения",
+      "переходы и условия"
+    ],
+    "outOfScope": [
+      "доменные действия",
+      "таймеры"
+    ]
+  },
+  "roles": [
+    {
+      "id": "system",
+      "name": "Система",
+      "kind": "system",
+      "responsibilities": [
+        "самопроверка"
+      ]
+    }
+  ],
+  "data": [
+    {
+      "id": "probe",
+      "type": "number",
+      "required": true,
+      "source": "engine self-test"
+    }
+  ],
+  "rules": [],
+  "elements": {
+    "__start__": {
+      "type": "startEvent",
+      "description": "Проверка запущена"
+    },
+    "check": {
+      "type": "exclusiveGateway",
+      "name": "Движок отвечает?"
+    },
+    "healthy": {
+      "type": "endEvent",
+      "name": "Исправен",
+      "final": true
+    },
+    "broken": {
+      "type": "endEvent",
+      "name": "Сломан",
+      "final": true
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_start",
+      "from": "__start__",
+      "to": "check"
+    },
+    {
+      "id": "tr_healthy",
+      "from": "check",
+      "to": "healthy",
+      "condition": {
+        "all": [
+          {
+            "field": "probe",
+            "op": "==",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "tr_broken",
+      "from": "check",
+      "to": "broken",
+      "condition": {
+        "all": [
+          {
+            "field": "probe",
+            "op": "!=",
+            "value": 1
+          }
+        ]
+      }
+    }
+  ],
+  "timers": [],
+  "tests": [
+    {
+      "id": "t_healthy",
+      "description": "Проба доходит до финального состояния",
+      "given": {
+        "context_id": "canary",
+        "probe": 1
+      },
+      "when": [],
+      "then": {
+        "state": "healthy",
+        "status": "completed"
+      }
+    }
+  ],
+  "audit": {
+    "include": [
+      "timestamp"
+    ]
+  }
+}
