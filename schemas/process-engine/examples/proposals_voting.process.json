@@ -3,7 +3,7 @@
   "id": "proposals.voting",
   "name": "Предложение и голосование",
   "description": "Предложение живёт до дедлайна или до последнего голоса, затем итог подводится по правилам сообщества, а одобренное решение передаётся на исполнение. Досрочное закрытие человеком процесс тоже принимает и доводит до конца.",
-  "version": "2026-11-04",
+  "version": "2026-11-05",
   "contextType": "proposal",
   "host": {
     "module": "proposals",
@@ -228,6 +228,11 @@
             "field": "event.aggregate_id",
             "op": "==",
             "value": "${context_id}"
+          },
+          {
+            "field": "status",
+            "op": "==",
+            "value": "voting"
           }
         ]
       },
@@ -248,7 +253,16 @@
         "timestamp",
         "timer"
       ],
-      "description": "Дедлайн голосования наступил"
+      "description": "Дедлайн голосования наступил",
+      "condition": {
+        "all": [
+          {
+            "field": "status",
+            "op": "==",
+            "value": "voting"
+          }
+        ]
+      }
     },
     {
       "id": "tr_approved",
