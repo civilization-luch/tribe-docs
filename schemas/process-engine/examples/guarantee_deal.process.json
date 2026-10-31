@@ -3,7 +3,7 @@
   "id": "guarantee.deal",
   "name": "Сделка под гарантию",
   "description": "Исполнение одной сделки: поставщик принимает покрытие и блокирует депозиты, затем сделка идёт до завершения, отмены или спора. Закупка ведёт столько сделок, сколько участников запустилось.",
-  "version": "2026-10-30.2",
+  "version": "2026-11-01",
   "contextType": "ge_deal",
   "host": {
     "module": "guarantee",
@@ -142,21 +142,19 @@
       }
     },
     "execution": {
-      "type": "intermediateCatchEvent",
+      "type": "eventBasedGateway",
       "name": "Исполнение",
       "description": "Покрытие заблокировано; ждём завершения, отмены или спора по сделке",
       "workDistribution": {
         "performedBy": "human"
       },
-      "assignedRole": "supplier",
-      "eventType": "message"
+      "assignedRole": "supplier"
     },
     "disputed": {
-      "type": "intermediateCatchEvent",
+      "type": "eventBasedGateway",
       "name": "Спор",
       "description": "Сделка в споре; ждём решения",
-      "assignedRole": "supplier",
-      "eventType": "message"
+      "assignedRole": "supplier"
     },
     "completed": {
       "type": "endEvent",
