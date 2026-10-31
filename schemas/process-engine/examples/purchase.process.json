@@ -353,7 +353,7 @@
       "id": "tr_no_deals",
       "from": "launched",
       "to": "closed",
-      "label": "сделок нет",
+      "label": "все сделки закрыты",
       "condition": {
         "all": [
           {
@@ -384,7 +384,7 @@
       "on": {
         "event": "DealCompleted"
       },
-      "label": "сделка завершена",
+      "label": "все сделки закрыты",
       "condition": {
         "all": [
           {
@@ -415,7 +415,7 @@
       "on": {
         "event": "DealCancelled"
       },
-      "label": "сделка отменена",
+      "label": "все сделки закрыты",
       "condition": {
         "all": [
           {
@@ -446,7 +446,7 @@
       "on": {
         "event": "DealResolved"
       },
-      "label": "спор решён",
+      "label": "все сделки закрыты",
       "condition": {
         "all": [
           {
