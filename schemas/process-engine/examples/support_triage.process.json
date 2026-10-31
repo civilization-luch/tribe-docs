@@ -3,7 +3,7 @@
   "id": "support.triage",
   "name": "Разбор обращения",
   "description": "Разбор обращения и работа по нему: принять, отклонить, уточнить или решить. Остальные переходы статусов выполняются в домене.",
-  "version": "2026-10-30",
+  "version": "2026-10-31",
   "contextType": "support_request",
   "host": {
     "module": "support",
@@ -293,6 +293,11 @@
             "field": "event.payload.author_id",
             "op": "==",
             "value": "${author_id}"
+          },
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
           }
         ]
       },

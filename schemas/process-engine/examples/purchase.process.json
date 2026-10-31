@@ -3,7 +3,7 @@
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение, затем исполнение сделок участников до закрытия. Точки ожидания — событийные развилки.",
-  "version": "2026-11-01",
+  "version": "2026-11-02",
   "contextType": "ge_purchase",
   "host": {
     "module": "guarantee"
@@ -220,7 +220,16 @@
         "timestamp",
         "event"
       ],
-      "description": "Досрочный запуск организатором"
+      "description": "Досрочный запуск организатором",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
     },
     {
       "id": "tr_cancel_collecting",
@@ -243,7 +252,16 @@
         "timestamp",
         "event"
       ],
-      "description": "Отмена на этапе сбора"
+      "description": "Отмена на этапе сбора",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
     },
     {
       "id": "tr_ready_flow",
@@ -324,7 +342,16 @@
         "timestamp",
         "event"
       ],
-      "description": "Запуск после достижения минимума"
+      "description": "Запуск после достижения минимума",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
     },
     {
       "id": "tr_cancel_ready",
@@ -347,7 +374,16 @@
         "timestamp",
         "event"
       ],
-      "description": "Отмена после достижения минимума"
+      "description": "Отмена после достижения минимума",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
     },
     {
       "id": "tr_no_deals",
@@ -499,11 +535,13 @@
       "description": "Минимум собран — ждём запуска",
       "given": {
         "collected": 60000,
-        "min_total": 50000
+        "min_total": 50000,
+        "context_id": "purchase-1"
       },
       "when": [
         {
-          "event": "PurchaseCreated"
+          "event": "PurchaseCreated",
+          "aggregate_id": "purchase-1"
         },
         {
           "timer": "timer_join_deadline"
@@ -519,11 +557,13 @@
       "description": "Минимум не собран — закупка истекает",
       "given": {
         "collected": 1000,
-        "min_total": 50000
+        "min_total": 50000,
+        "context_id": "purchase-1"
       },
       "when": [
         {
-          "event": "PurchaseCreated"
+          "event": "PurchaseCreated",
+          "aggregate_id": "purchase-1"
         },
         {
           "timer": "timer_join_deadline"
@@ -539,18 +579,21 @@
       "description": "Запуск подтверждён — исполнение сделок",
       "given": {
         "collected": 60000,
-        "min_total": 50000
+        "min_total": 50000,
+        "context_id": "purchase-1"
       },
       "when": [
         {
-          "event": "PurchaseCreated"
+          "event": "PurchaseCreated",
+          "aggregate_id": "purchase-1"
         },
         {
           "timer": "timer_join_deadline"
         },
         {
           "event": "PurchaseLaunched",
-          "actor": "user-1"
+          "actor": "user-1",
+          "aggregate_id": "purchase-1"
         }
       ],
       "then": {
@@ -565,18 +608,21 @@
         "collected": 60000,
         "min_total": 50000,
         "deals_total": 2,
-        "deals_open": 0
+        "deals_open": 0,
+        "context_id": "purchase-1"
       },
       "when": [
         {
-          "event": "PurchaseCreated"
+          "event": "PurchaseCreated",
+          "aggregate_id": "purchase-1"
         },
         {
           "timer": "timer_join_deadline"
         },
         {
           "event": "PurchaseLaunched",
-          "actor": "user-1"
+          "actor": "user-1",
+          "aggregate_id": "purchase-1"
         },
         {
           "event": "DealCompleted",

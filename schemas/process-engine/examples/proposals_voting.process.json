@@ -1,0 +1,650 @@
+{
+  "schemaVersion": "0.4",
+  "id": "proposals.voting",
+  "name": "Предложение и голосование",
+  "description": "Предложение живёт до дедлайна или до последнего голоса, затем итог подводится по правилам сообщества, а одобренное решение передаётся на исполнение. Досрочное закрытие человеком процесс тоже принимает и доводит до конца.",
+  "version": "2026-11-02",
+  "contextType": "proposal",
+  "host": {
+    "module": "proposals",
+    "stateMap": {
+      "voting": "voting",
+      "approved": "execution",
+      "executed": "executed"
+    },
+    "contextUrl": "/community/{community}/proposals/{id}",
+    "contextPreview": [
+      {
+        "field": "title",
+        "label": "Предложение"
+      },
+      {
+        "field": "type",
+        "label": "Тип"
+      },
+      {
+        "field": "status",
+        "label": "Статус"
+      },
+      {
+        "field": "ends_at",
+        "label": "До",
+        "type": "date"
+      }
+    ],
+    "contextLabel": "{title}"
+  },
+  "passport": {
+    "owner": "admin",
+    "goal": "Довести предложение от голосования до исполнения решения",
+    "startsWhen": "участник создал предложение",
+    "endsWhen": "предложение отклонено, отменено или исполнено",
+    "inScope": [
+      "период голосования",
+      "подведение итогов по кворуму и большинству",
+      "досрочное закрытие",
+      "исполнение одобренного решения"
+    ],
+    "outOfScope": [
+      "подсчёт голосов делегирования",
+      "финансовые проводки по решению"
+    ],
+    "successMetrics": [
+      {
+        "name": "доля решений, исполненных после одобрения",
+        "target": ">= 80%",
+        "unit": "процент"
+      },
+      {
+        "name": "время от дедлайна до итога",
+        "target": "<= 1",
+        "unit": "день"
+      }
+    ]
+  },
+  "roles": [
+    {
+      "id": "proposer",
+      "name": "Автор предложения",
+      "kind": "human",
+      "responsibilities": [
+        "формулировка предложения",
+        "голос"
+      ],
+      "assigneeField": "proposer_id"
+    },
+    {
+      "id": "admin",
+      "name": "Администратор сообщества",
+      "kind": "human",
+      "responsibilities": [
+        "исполнение одобренного решения"
+      ]
+    },
+    {
+      "id": "system",
+      "name": "Система",
+      "kind": "system",
+      "responsibilities": [
+        "дедлайн голосования",
+        "подведение итогов"
+      ]
+    }
+  ],
+  "data": [
+    {
+      "id": "ends_at",
+      "type": "string",
+      "required": true,
+      "source": "proposal.ends_at"
+    },
+    {
+      "id": "outcome",
+      "type": "string",
+      "required": true,
+      "source": "tally(votes, quorum_percent, majority_type, delegations)"
+    },
+    {
+      "id": "votes_cast",
+      "type": "number",
+      "required": true,
+      "source": "len(proposal.votes) + delegates"
+    },
+    {
+      "id": "total_members",
+      "type": "number",
+      "required": true,
+      "source": "активные участники сообщества или группы"
+    }
+  ],
+  "rules": [],
+  "elements": {
+    "__start__": {
+      "type": "startEvent",
+      "description": "Предложение создано"
+    },
+    "voting": {
+      "type": "intermediateCatchEvent",
+      "name": "Идёт голосование",
+      "description": "Голоса принимаются до дедлайна; если проголосовали все — итог подводится сразу",
+      "eventType": "timer"
+    },
+    "tally": {
+      "type": "exclusiveGateway",
+      "name": "Итоги голосования",
+      "description": "Кворум и большинство по правилам сообщества"
+    },
+    "already_closed": {
+      "type": "exclusiveGateway",
+      "name": "Голосование закрыто досрочно",
+      "description": "Итог уже подведён человеком — ведём процесс по нему"
+    },
+    "execution": {
+      "type": "userTask",
+      "name": "Исполнение решения",
+      "description": "Выполнить то, что решили, и подтвердить исполнение",
+      "assignedRole": "admin",
+      "timing": {
+        "sla": 72,
+        "reminder": 36
+      },
+      "decisions": [
+        {
+          "id": "execute",
+          "label": "Исполнено"
+        },
+        {
+          "id": "later",
+          "label": "Отложить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "after_execution": {
+      "type": "exclusiveGateway",
+      "name": "Решение исполнено?"
+    },
+    "executed": {
+      "type": "endEvent",
+      "name": "Исполнено",
+      "description": "Решение одобрено и выполнено",
+      "final": true
+    },
+    "approved": {
+      "type": "endEvent",
+      "name": "Одобрено, ждёт исполнения",
+      "description": "Решение принято, исполнение отложено",
+      "final": true
+    },
+    "rejected": {
+      "type": "endEvent",
+      "name": "Отклонено",
+      "description": "Нет кворума или большинства",
+      "final": true
+    },
+    "cancelled": {
+      "type": "endEvent",
+      "name": "Отменено",
+      "description": "Предложение снято автором или администратором",
+      "final": true
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_created",
+      "from": "__start__",
+      "to": "voting",
+      "on": {
+        "event": "ProposalCreated"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Предложение ушло в голосование"
+    },
+    {
+      "id": "tr_all_voted",
+      "from": "voting",
+      "to": "tally",
+      "on": {
+        "event": "VoteCasted"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "total_members",
+            "op": ">",
+            "value": 0
+          },
+          {
+            "field": "votes_cast",
+            "op": ">=",
+            "value": "${total_members}"
+          },
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Проголосовали все — ждать дедлайна незачем"
+    },
+    {
+      "id": "tr_deadline",
+      "from": "voting",
+      "to": "tally",
+      "on": {
+        "timer": "timer_ends"
+      },
+      "journal": [
+        "timestamp",
+        "timer"
+      ],
+      "description": "Дедлайн голосования наступил"
+    },
+    {
+      "id": "tr_approved",
+      "from": "tally",
+      "to": "execution",
+      "condition": {
+        "all": [
+          {
+            "field": "outcome",
+            "op": "==",
+            "value": "approved"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "proposals_close_proposal",
+          "args": {
+            "proposal_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "actorMode": "system",
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Предложение принято",
+          "body": "${context_label}: решение принято и передано на исполнение"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "action"
+      ],
+      "description": "Кворум есть, большинство за"
+    },
+    {
+      "id": "tr_rejected",
+      "from": "tally",
+      "to": "rejected",
+      "condition": {
+        "all": [
+          {
+            "field": "outcome",
+            "op": "==",
+            "value": "rejected"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "proposals_close_proposal",
+          "args": {
+            "proposal_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "actorMode": "system",
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Предложение отклонено",
+          "body": "${context_label}: итоги голосования против"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "action"
+      ],
+      "description": "Нет кворума или большинства"
+    },
+    {
+      "id": "tr_closed_early",
+      "from": "voting",
+      "to": "already_closed",
+      "on": {
+        "event": "ProposalClosed"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Голосование закрыли до дедлайна",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tr_closed_approved",
+      "from": "already_closed",
+      "to": "execution",
+      "condition": {
+        "all": [
+          {
+            "field": "status",
+            "op": "==",
+            "value": "approved"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp"
+      ]
+    },
+    {
+      "id": "tr_closed_rejected",
+      "from": "already_closed",
+      "to": "rejected",
+      "condition": {
+        "all": [
+          {
+            "field": "status",
+            "op": "==",
+            "value": "rejected"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp"
+      ]
+    },
+    {
+      "id": "tr_cancelled",
+      "from": "voting",
+      "to": "cancelled",
+      "on": {
+        "event": "ProposalCancelled"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Предложение сняли",
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tr_decided",
+      "from": "execution",
+      "to": "after_execution",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ]
+    },
+    {
+      "id": "tr_executed",
+      "from": "after_execution",
+      "to": "executed",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "execute"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "proposals_execute_proposal",
+          "args": {
+            "proposal_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Решение исполнено",
+          "body": "${context_label}: исполнение подтверждено"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_later",
+      "from": "after_execution",
+      "to": "approved",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "later"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Исполнение вынесено за пределы процесса"
+    }
+  ],
+  "timers": [
+    {
+      "id": "timer_ends",
+      "state": "voting",
+      "at": "${ends_at}"
+    }
+  ],
+  "tests": [
+    {
+      "id": "t_approved_and_executed",
+      "description": "Итог по дедлайну, затем исполнение",
+      "given": {
+        "context_id": "prop-1",
+        "ends_at": "2026-11-07T12:00:00+00:00",
+        "outcome": "approved",
+        "votes_cast": 3,
+        "total_members": 5,
+        "status": "voting"
+      },
+      "when": [
+        {
+          "event": "ProposalCreated",
+          "aggregate_id": "prop-1",
+          "payload": {
+            "status": "voting"
+          }
+        },
+        {
+          "timer": "timer_ends"
+        },
+        {
+          "decision": "execute",
+          "actor": "admin-1"
+        }
+      ],
+      "then": {
+        "state": "executed",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_rejected_at_deadline",
+      "description": "Нет большинства — предложение отклонено",
+      "given": {
+        "context_id": "prop-2",
+        "ends_at": "2026-11-07T12:00:00+00:00",
+        "outcome": "rejected",
+        "votes_cast": 2,
+        "total_members": 5,
+        "status": "voting"
+      },
+      "when": [
+        {
+          "event": "ProposalCreated",
+          "aggregate_id": "prop-2",
+          "payload": {
+            "status": "voting"
+          }
+        },
+        {
+          "timer": "timer_ends"
+        }
+      ],
+      "then": {
+        "state": "rejected",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_all_voted_closes_early",
+      "description": "Проголосовали все — итог без ожидания дедлайна",
+      "given": {
+        "context_id": "prop-3",
+        "ends_at": "2026-11-07T12:00:00+00:00",
+        "outcome": "approved",
+        "total_members": 2,
+        "status": "voting",
+        "votes_cast": 2
+      },
+      "when": [
+        {
+          "event": "ProposalCreated",
+          "aggregate_id": "prop-3",
+          "payload": {
+            "status": "voting"
+          }
+        },
+        {
+          "event": "VoteCasted",
+          "aggregate_id": "prop-3",
+          "payload": {
+            "voter_id": "user-1",
+            "option_index": 0
+          },
+          "actor": "user-1"
+        },
+        {
+          "decision": "later",
+          "actor": "admin-1"
+        }
+      ],
+      "then": {
+        "state": "approved",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_closed_by_human",
+      "description": "Досрочное закрытие человеком ведёт к исполнению",
+      "given": {
+        "context_id": "prop-4",
+        "ends_at": "2026-11-07T12:00:00+00:00",
+        "outcome": "approved",
+        "votes_cast": 3,
+        "total_members": 5,
+        "status": "approved"
+      },
+      "when": [
+        {
+          "event": "ProposalCreated",
+          "aggregate_id": "prop-4",
+          "payload": {
+            "status": "voting"
+          }
+        },
+        {
+          "event": "ProposalClosed",
+          "aggregate_id": "prop-4",
+          "payload": {
+            "status": "approved"
+          }
+        }
+      ],
+      "then": {
+        "state": "execution",
+        "status": "awaiting_user"
+      }
+    },
+    {
+      "id": "t_cancelled",
+      "description": "Снятое предложение закрывает процесс",
+      "given": {
+        "context_id": "prop-5",
+        "ends_at": "2026-11-07T12:00:00+00:00",
+        "outcome": "approved",
+        "votes_cast": 1,
+        "total_members": 5,
+        "status": "voting"
+      },
+      "when": [
+        {
+          "event": "ProposalCreated",
+          "aggregate_id": "prop-5",
+          "payload": {
+            "status": "voting"
+          }
+        },
+        {
+          "event": "ProposalCancelled",
+          "aggregate_id": "prop-5",
+          "payload": {
+            "status": "cancelled"
+          }
+        }
+      ],
+      "then": {
+        "state": "cancelled",
+        "status": "completed"
+      }
+    }
+  ],
+  "audit": {
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event",
+      "action"
+    ]
+  }
+}

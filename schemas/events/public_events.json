@@ -158,6 +158,52 @@
         "status": "string",
         "resolution": "string"
       }
+    },
+    "ProposalCreated": {
+      "module": "proposals",
+      "version": 1,
+      "payload": {
+        "title": "string",
+        "status": "string",
+        "type": "string",
+        "ends_at": "string",
+        "proposer_id": "string"
+      }
+    },
+    "VoteCasted": {
+      "module": "proposals",
+      "version": 1,
+      "payload": {
+        "voter_id": "string",
+        "option_index": "number"
+      }
+    },
+    "ProposalClosed": {
+      "module": "proposals",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string",
+        "total_votes": "number",
+        "yes_votes": "number",
+        "total_members": "number"
+      }
+    },
+    "ProposalExecuted": {
+      "module": "proposals",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "executed_at": "string"
+      }
+    },
+    "ProposalCancelled": {
+      "module": "proposals",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string"
+      }
     }
   }
 }
