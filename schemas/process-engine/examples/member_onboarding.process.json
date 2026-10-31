@@ -114,7 +114,8 @@
       "final": true
     },
     "decision": {
-      "type": "exclusiveGateway"
+      "type": "exclusiveGateway",
+      "name": "Решение по заявке"
     }
   },
   "transitions": [

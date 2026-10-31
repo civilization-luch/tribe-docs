@@ -123,7 +123,8 @@
       "final": true
     },
     "after_review": {
-      "type": "exclusiveGateway"
+      "type": "exclusiveGateway",
+      "name": "Решение бухгалтера"
     }
   },
   "transitions": [
@@ -178,7 +179,8 @@
           "action": "wallet_confirm_deposit",
           "args": {
             "claim_id": "${context_id}",
-            "via_process": true
+            "via_process": true,
+            "require_proof": true
           }
         }
       ],

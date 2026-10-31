@@ -142,10 +142,12 @@
       "final": true
     },
     "after_triage": {
-      "type": "exclusiveGateway"
+      "type": "exclusiveGateway",
+      "name": "Что делаем с обращением?"
     },
     "after_work": {
-      "type": "exclusiveGateway"
+      "type": "exclusiveGateway",
+      "name": "Обращение решено?"
     }
   },
   "transitions": [
