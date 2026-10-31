@@ -1,0 +1,934 @@
+{
+  "schemaVersion": "0.4",
+  "id": "treasury.expense",
+  "name": "Расход из казны",
+  "description": "Заявка на расход: проверка политики сообщества, одобрение казначея (для крупных сумм — второе одобрение администратора), оплата и подтверждение выдачи. Решения принимает процесс, домен хранит факты.",
+  "version": "2026-11-01",
+  "contextType": "treasury_transaction",
+  "host": {
+    "module": "treasury",
+    "stateMap": {
+      "pending_approval": "approval",
+      "approved": "payment",
+      "awaiting_receipt": "handover"
+    },
+    "contextUrl": "/community/{community}/treasury",
+    "contextPreview": [
+      {
+        "field": "amount",
+        "label": "Сумма",
+        "type": "money"
+      },
+      {
+        "field": "description",
+        "label": "Назначение"
+      },
+      {
+        "field": "recipient",
+        "label": "Получатель"
+      },
+      {
+        "field": "method",
+        "label": "Способ"
+      },
+      {
+        "field": "reference",
+        "label": "Документ"
+      },
+      {
+        "field": "status",
+        "label": "Статус"
+      }
+    ],
+    "contextLabel": "Расход {amount} · {description}"
+  },
+  "passport": {
+    "owner": "treasurer",
+    "goal": "Провести расход с одобрением и подтверждением, не теряя документов",
+    "startsWhen": "участник создал заявку на расход из казны",
+    "endsWhen": "расход оплачен и подтверждён, отклонён или отозван заявителем",
+    "inScope": [
+      "проверка политики одобрения",
+      "одобрение казначея",
+      "второе одобрение для крупных сумм",
+      "оплата",
+      "подтверждение выдачи наличных"
+    ],
+    "outOfScope": [
+      "банковские проводки",
+      "расчёт остатка",
+      "пополнение казны"
+    ],
+    "successMetrics": [
+      {
+        "name": "доля расходов, оплаченных без просрочки",
+        "target": ">= 90%",
+        "unit": "процент"
+      },
+      {
+        "name": "время от заявки до оплаты",
+        "target": "<= 2",
+        "unit": "дни"
+      }
+    ]
+  },
+  "roles": [
+    {
+      "id": "requester",
+      "name": "Заявитель",
+      "kind": "human",
+      "responsibilities": [
+        "создание заявки",
+        "отзыв заявки",
+        "подтверждение получения наличных"
+      ],
+      "assigneeField": "created_by"
+    },
+    {
+      "id": "treasurer",
+      "name": "Казначей",
+      "kind": "human",
+      "responsibilities": [
+        "одобрение расхода",
+        "оплата"
+      ],
+      "capability": "treasury.operate",
+      "scopeField": "treasury_id"
+    },
+    {
+      "id": "admin",
+      "name": "Администратор сообщества",
+      "kind": "human",
+      "responsibilities": [
+        "второе одобрение крупных расходов"
+      ]
+    },
+    {
+      "id": "system",
+      "name": "Система",
+      "kind": "system",
+      "responsibilities": [
+        "применение политики без одобрения",
+        "таймеры"
+      ]
+    }
+  ],
+  "data": [
+    {
+      "id": "amount",
+      "type": "number",
+      "required": true,
+      "source": "treasury_transaction.amount"
+    },
+    {
+      "id": "method",
+      "type": "string",
+      "required": true,
+      "source": "treasury_transaction.method"
+    },
+    {
+      "id": "approval_required",
+      "type": "boolean",
+      "required": true,
+      "source": "community.settings.treasury.require_approval_for_withdrawal"
+    },
+    {
+      "id": "approvals_required",
+      "type": "number",
+      "required": true,
+      "source": "amount >= treasury.second_approval_above ? 2 : 1"
+    }
+  ],
+  "rules": [],
+  "elements": {
+    "__start__": {
+      "type": "startEvent",
+      "description": "Заявка на расход создана"
+    },
+    "policy": {
+      "type": "exclusiveGateway",
+      "name": "Нужно одобрение?",
+      "description": "Политика сообщества: требуются ли одобрения для этой суммы"
+    },
+    "approval": {
+      "type": "userTask",
+      "name": "Одобрение расхода",
+      "description": "Проверить назначение, получателя и документ, затем одобрить или отклонить",
+      "assignedRole": "treasurer",
+      "timing": {
+        "sla": 24,
+        "reminder": 12
+      },
+      "decisions": [
+        {
+          "id": "approve",
+          "label": "Одобрить"
+        },
+        {
+          "id": "reject",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "after_approval": {
+      "type": "exclusiveGateway",
+      "name": "Решение казначея"
+    },
+    "second_approval": {
+      "type": "userTask",
+      "name": "Второе одобрение",
+      "description": "Крупный расход: подтвердить вторым подписантом из администрации",
+      "assignedRole": "admin",
+      "timing": {
+        "sla": 48,
+        "reminder": 24
+      },
+      "decisions": [
+        {
+          "id": "approve",
+          "label": "Одобрить"
+        },
+        {
+          "id": "reject",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "after_second": {
+      "type": "exclusiveGateway",
+      "name": "Решение администратора"
+    },
+    "payment": {
+      "type": "userTask",
+      "name": "Оплата расхода",
+      "description": "Провести платёж по документу и отметить выполнение",
+      "assignedRole": "treasurer",
+      "timing": {
+        "sla": 48,
+        "reminder": 24
+      },
+      "decisions": [
+        {
+          "id": "paid",
+          "label": "Оплачено"
+        },
+        {
+          "id": "cancel",
+          "label": "Отменить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
+    },
+    "after_payment": {
+      "type": "exclusiveGateway",
+      "name": "Оплачено?"
+    },
+    "handover": {
+      "type": "intermediateCatchEvent",
+      "name": "Ожидание подтверждения выдачи",
+      "description": "Наличные выданы; ждём, пока получатель подтвердит получение",
+      "timing": {
+        "deadline": 168
+      },
+      "eventType": "message"
+    },
+    "executed": {
+      "type": "endEvent",
+      "name": "Оплачено",
+      "description": "Деньги ушли получателю",
+      "final": true
+    },
+    "rejected": {
+      "type": "endEvent",
+      "name": "Отклонено",
+      "description": "Расход отклонён одобряющим",
+      "final": true
+    },
+    "cancelled": {
+      "type": "endEvent",
+      "name": "Отменено",
+      "description": "Заявка отозвана заявителем или отменена казначеем",
+      "final": true
+    },
+    "unconfirmed": {
+      "type": "endEvent",
+      "name": "Выдача не подтверждена",
+      "description": "Наличные выданы, но получатель не подтвердил получение в срок",
+      "final": true
+    }
+  },
+  "transitions": [
+    {
+      "id": "tr_created",
+      "from": "__start__",
+      "to": "policy",
+      "on": {
+        "event": "TransactionCreated"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.payload.type",
+            "op": "==",
+            "value": "withdrawal"
+          },
+          {
+            "field": "event.payload.status",
+            "op": "==",
+            "value": "pending_approval"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Заявка на расход поступила в процесс"
+    },
+    {
+      "id": "tr_auto",
+      "from": "policy",
+      "to": "payment",
+      "condition": {
+        "all": [
+          {
+            "field": "approval_required",
+            "op": "==",
+            "value": false
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_approve_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "required": 1,
+            "via_process": true
+          }
+        }
+      ],
+      "actorMode": "system",
+      "journal": [
+        "timestamp",
+        "action"
+      ],
+      "description": "Политика сообщества не требует одобрения — идём сразу к оплате"
+    },
+    {
+      "id": "tr_needs_approval",
+      "from": "policy",
+      "to": "approval",
+      "condition": {
+        "all": [
+          {
+            "field": "approval_required",
+            "op": "==",
+            "value": true
+          }
+        ]
+      },
+      "journal": [
+        "timestamp"
+      ],
+      "description": "Расход требует одобрения казначея"
+    },
+    {
+      "id": "tr_decided",
+      "from": "approval",
+      "to": "after_approval",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Казначей принял решение"
+    },
+    {
+      "id": "tr_rejected",
+      "from": "after_approval",
+      "to": "rejected",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "reject"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_reject_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "reason": "отклонено казначеем",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Расход отклонён",
+          "body": "${context_label}: казначей отклонил заявку"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_second",
+      "from": "after_approval",
+      "to": "second_approval",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "approve"
+          },
+          {
+            "field": "approvals_required",
+            "op": ">=",
+            "value": 2
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_approve_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "required": "${approvals_required}",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Первое одобрение получено, нужен второй подписант"
+    },
+    {
+      "id": "tr_approved",
+      "from": "after_approval",
+      "to": "payment",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "approve"
+          },
+          {
+            "field": "approvals_required",
+            "op": "<",
+            "value": 2
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_approve_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "required": 1,
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ],
+      "description": "Одобрения достаточно — расход готов к оплате"
+    },
+    {
+      "id": "tr_second_decided",
+      "from": "second_approval",
+      "to": "after_second",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ]
+    },
+    {
+      "id": "tr_second_rejected",
+      "from": "after_second",
+      "to": "rejected",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "reject"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_reject_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "reason": "отклонено администратором",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Расход отклонён",
+          "body": "${context_label}: администратор отклонил заявку"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_second_approved",
+      "from": "after_second",
+      "to": "payment",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "approve"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_approve_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "required": 2,
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Расход одобрен",
+          "body": "${context_label}: расход одобрен и ожидает оплаты"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_payment_decided",
+      "from": "payment",
+      "to": "after_payment",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ]
+    },
+    {
+      "id": "tr_cash",
+      "from": "after_payment",
+      "to": "handover",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "paid"
+          },
+          {
+            "field": "method",
+            "op": "==",
+            "value": "cash"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_execute_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "action"
+      ],
+      "description": "Наличные выданы — ждём подтверждения получателя"
+    },
+    {
+      "id": "tr_paid",
+      "from": "after_payment",
+      "to": "executed",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "paid"
+          },
+          {
+            "field": "method",
+            "op": "!=",
+            "value": "cash"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_execute_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "via_process": true
+          }
+        }
+      ],
+      "notify": [
+        {
+          "to": "context_owner",
+          "title": "Расход оплачен",
+          "body": "${context_label}: платёж проведён"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_payment_cancelled",
+      "from": "after_payment",
+      "to": "cancelled",
+      "condition": {
+        "all": [
+          {
+            "field": "last_decision",
+            "op": "==",
+            "value": "cancel"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "action": "treasury_cancel_expense",
+          "args": {
+            "expense_id": "${context_id}",
+            "reason": "отменено казначеем",
+            "via_process": true
+          }
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision",
+        "action"
+      ]
+    },
+    {
+      "id": "tr_receipt",
+      "from": "handover",
+      "to": "executed",
+      "on": {
+        "event": "TransactionReceiptConfirmed"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Получатель подтвердил выдачу наличных"
+    },
+    {
+      "id": "tr_receipt_timeout",
+      "from": "handover",
+      "to": "unconfirmed",
+      "on": {
+        "timer": "timer_receipt"
+      },
+      "notify": [
+        {
+          "to": "owner",
+          "title": "Выдача не подтверждена",
+          "body": "${context_label}: получатель не подтвердил наличные в срок"
+        }
+      ],
+      "journal": [
+        "timestamp",
+        "timer"
+      ]
+    },
+    {
+      "id": "tr_withdraw_approval",
+      "from": "approval",
+      "to": "cancelled",
+      "on": {
+        "event": "TransactionCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Заявитель отозвал заявку до решения"
+    },
+    {
+      "id": "tr_withdraw_second",
+      "from": "second_approval",
+      "to": "cancelled",
+      "on": {
+        "event": "TransactionCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ]
+    },
+    {
+      "id": "tr_withdraw_payment",
+      "from": "payment",
+      "to": "cancelled",
+      "on": {
+        "event": "TransactionCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ]
+    }
+  ],
+  "timers": [
+    {
+      "id": "timer_receipt",
+      "state": "handover",
+      "at": "${state_deadline}"
+    }
+  ],
+  "tests": [
+    {
+      "id": "t_approved_and_paid",
+      "description": "Одобрение и оплата завершают процесс",
+      "given": {
+        "context_id": "txn-1",
+        "amount": 5000,
+        "method": "bank",
+        "approval_required": true,
+        "approvals_required": 1
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-1",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        },
+        {
+          "decision": "approve",
+          "actor": "treasurer-1"
+        },
+        {
+          "decision": "paid",
+          "actor": "treasurer-1"
+        }
+      ],
+      "then": {
+        "state": "executed",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_rejected",
+      "description": "Отклонение завершает процесс",
+      "given": {
+        "context_id": "txn-2",
+        "amount": 5000,
+        "method": "bank",
+        "approval_required": true,
+        "approvals_required": 1
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-2",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        },
+        {
+          "decision": "reject",
+          "actor": "treasurer-1"
+        }
+      ],
+      "then": {
+        "state": "rejected",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "t_large_expense_needs_two_approvals",
+      "description": "Крупный расход ждёт второго одобрения",
+      "given": {
+        "context_id": "txn-3",
+        "amount": 500000,
+        "method": "bank",
+        "approval_required": true,
+        "approvals_required": 2
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-3",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        },
+        {
+          "decision": "approve",
+          "actor": "treasurer-1"
+        }
+      ],
+      "then": {
+        "state": "second_approval",
+        "status": "awaiting_user"
+      }
+    },
+    {
+      "id": "t_policy_skips_approval",
+      "description": "Без обязательного одобрения процесс идёт сразу к оплате",
+      "given": {
+        "context_id": "txn-4",
+        "amount": 1000,
+        "method": "bank",
+        "approval_required": false,
+        "approvals_required": 1
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-4",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        }
+      ],
+      "then": {
+        "state": "payment",
+        "status": "awaiting_user"
+      }
+    },
+    {
+      "id": "t_request_withdrawn",
+      "description": "Отзыв заявки прерывает задачу одобрения",
+      "given": {
+        "context_id": "txn-5",
+        "amount": 5000,
+        "method": "bank",
+        "approval_required": true,
+        "approvals_required": 1
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-5",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        },
+        {
+          "event": "TransactionCancelled",
+          "aggregate_id": "txn-5",
+          "payload": {
+            "status": "cancelled"
+          }
+        }
+      ],
+      "then": {
+        "state": "cancelled",
+        "status": "completed"
+      }
+    }
+  ],
+  "audit": {
+    "include": [
+      "actor",
+      "decision",
+      "timestamp",
+      "event",
+      "action"
+    ]
+  }
+}

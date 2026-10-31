@@ -3,7 +3,7 @@
   "id": "guarantee.deal",
   "name": "Сделка под гарантию",
   "description": "Исполнение одной сделки: поставщик принимает покрытие и блокирует депозиты, затем сделка идёт до завершения, отмены или спора. Закупка ведёт столько сделок, сколько участников запустилось.",
-  "version": "2026-11-01",
+  "version": "2026-11-02",
   "contextType": "ge_deal",
   "host": {
     "module": "guarantee",
@@ -193,6 +193,28 @@
       ],
       "description": "Сделка предложена — поставщик принимает решение",
       "label": "сделка предложена"
+    },
+    {
+      "id": "tr_cancelled_before_confirm",
+      "from": "confirm",
+      "to": "cancelled",
+      "on": {
+        "event": "DealCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Сделку отменили, пока поставщик не принял покрытие"
     },
     {
       "id": "tr_decide",

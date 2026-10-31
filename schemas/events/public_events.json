@@ -37,6 +37,60 @@
         "user_id": "string"
       }
     },
+    "TransactionCreated": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "treasury_id": "string",
+        "amount": "number",
+        "type": "string",
+        "status": "string",
+        "method": "string",
+        "recipient": "string",
+        "created_by": "string"
+      }
+    },
+    "TransactionApproved": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "approved_by": "array"
+      }
+    },
+    "TransactionRejected": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string"
+      }
+    },
+    "TransactionExecuted": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "executed_by": "string"
+      }
+    },
+    "TransactionCancelled": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "reason": "string"
+      }
+    },
+    "TransactionReceiptConfirmed": {
+      "module": "treasury",
+      "version": 1,
+      "payload": {
+        "status": "string",
+        "receipt_confirmed_by": "string",
+        "receipt_confirmed_at": "string"
+      }
+    },
     "PurchaseCreated": {
       "module": "guarantee",
       "version": 1,
