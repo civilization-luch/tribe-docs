@@ -249,7 +249,7 @@
       "id": "tr_ready_flow",
       "from": "after_deadline",
       "to": "ready",
-      "label": "сумма ≥ минимума",
+      "label": "да",
       "condition": {
         "all": [
           {
@@ -278,7 +278,7 @@
       "id": "tr_expire_flow",
       "from": "after_deadline",
       "to": "expired",
-      "label": "сумма < минимума",
+      "label": "нет",
       "condition": {
         "all": [
           {
