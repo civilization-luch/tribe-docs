@@ -3,7 +3,7 @@
   "id": "treasury.expense",
   "name": "Расход из казны",
   "description": "Заявка на расход: проверка политики сообщества, одобрение казначея (для крупных сумм — второе одобрение администратора), оплата и подтверждение выдачи. Решения принимает процесс, домен хранит факты.",
-  "version": "2026-11-01",
+  "version": "2026-11-02",
   "contextType": "treasury_transaction",
   "host": {
     "module": "treasury",
@@ -377,7 +377,7 @@
       ],
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:requester",
           "title": "Расход отклонён",
           "body": "${context_label}: казначей отклонил заявку"
         }
@@ -496,7 +496,7 @@
       ],
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:requester",
           "title": "Расход отклонён",
           "body": "${context_label}: администратор отклонил заявку"
         }
@@ -533,7 +533,7 @@
       ],
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:requester",
           "title": "Расход одобрен",
           "body": "${context_label}: расход одобрен и ожидает оплаты"
         }
@@ -618,7 +618,7 @@
       ],
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:requester",
           "title": "Расход оплачен",
           "body": "${context_label}: платёж проведён"
         }

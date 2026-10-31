@@ -3,7 +3,7 @@
   "id": "proposals.voting",
   "name": "Предложение и голосование",
   "description": "Предложение живёт до дедлайна или до последнего голоса, затем итог подводится по правилам сообщества, а одобренное решение передаётся на исполнение. Досрочное закрытие человеком процесс тоже принимает и доводит до конца.",
-  "version": "2026-11-02",
+  "version": "2026-11-04",
   "contextType": "proposal",
   "host": {
     "module": "proposals",
@@ -275,7 +275,7 @@
       "actorMode": "system",
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:proposer",
           "title": "Предложение принято",
           "body": "${context_label}: решение принято и передано на исполнение"
         }
@@ -311,7 +311,7 @@
       "actorMode": "system",
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:proposer",
           "title": "Предложение отклонено",
           "body": "${context_label}: итоги голосования против"
         }
@@ -359,6 +359,13 @@
       },
       "journal": [
         "timestamp"
+      ],
+      "notify": [
+        {
+          "to": "role:proposer",
+          "title": "Предложение принято",
+          "body": "${context_label}: решение принято и передано на исполнение"
+        }
       ]
     },
     {
@@ -376,6 +383,13 @@
       },
       "journal": [
         "timestamp"
+      ],
+      "notify": [
+        {
+          "to": "role:proposer",
+          "title": "Предложение отклонено",
+          "body": "${context_label}: итоги голосования против"
+        }
       ]
     },
     {
@@ -434,7 +448,7 @@
       ],
       "notify": [
         {
-          "to": "context_owner",
+          "to": "role:proposer",
           "title": "Решение исполнено",
           "body": "${context_label}: исполнение подтверждено"
         }
