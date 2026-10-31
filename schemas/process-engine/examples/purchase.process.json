@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "id": "guarantee.purchase",
   "name": "Закупка (Purchase)",
   "description": "Жизненный цикл совместной закупки: сбор заявок до дедлайна, готовность при достижении минимума, запуск организатором или истечение, затем исполнение сделок участников до закрытия. Точки ожидания — событийные развилки.",
@@ -128,28 +128,46 @@
       "description": "Закупка готова к запуску, только если сумма поданных заявок не меньше min_total"
     }
   ],
-  "states": {
+  "elements": {
     "__start__": {
-      "type": "start_event",
+      "type": "startEvent",
       "description": "Закупка создана организатором"
     },
     "expired": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Истекло",
       "description": "Дедлайн прошёл, минимум не собран; все заявки отменены",
       "final": true
     },
     "cancelled": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Отменено",
       "description": "Отменено организатором; заявки и сделки отменены",
       "final": true
     },
     "closed": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Закрыто",
       "description": "Все сделки закупки завершены, отменены или разрешены",
       "final": true
+    },
+    "collecting": {
+      "type": "eventBasedGateway",
+      "name": "Сбор заявок"
+    },
+    "after_deadline": {
+      "type": "exclusiveGateway",
+      "name": "Минимум набран?"
+    },
+    "ready": {
+      "type": "eventBasedGateway",
+      "name": "Набрано, ждём запуска",
+      "assignedRole": "organizer"
+    },
+    "launched": {
+      "type": "eventBasedGateway",
+      "name": "Исполнение сделок",
+      "assignedRole": "member"
     }
   },
   "transitions": [
@@ -460,44 +478,6 @@
       "at": "${join_deadline}"
     }
   ],
-  "forbidden": [
-    {
-      "id": "deny_expired_reopen",
-      "from": "expired",
-      "to": "collecting",
-      "reason": "Дедлайн прошёл, сбор заявок закрыт безвозвратно"
-    },
-    {
-      "id": "deny_expired_launch",
-      "from": "expired",
-      "to": "launched",
-      "reason": "Нельзя запустить закупку, у которой истёк срок и не собран минимум"
-    },
-    {
-      "id": "deny_cancelled_reopen",
-      "from": "cancelled",
-      "to": "collecting",
-      "reason": "Отменённая закупка не возвращается в сбор"
-    },
-    {
-      "id": "deny_cancelled_launch",
-      "from": "cancelled",
-      "to": "launched",
-      "reason": "Отменённую закупку нельзя запустить"
-    },
-    {
-      "id": "deny_launched_back",
-      "from": "launched",
-      "to": "collecting",
-      "reason": "После запуска возврат в сбор невозможен"
-    },
-    {
-      "id": "deny_closed_back",
-      "from": "closed",
-      "to": "launched",
-      "reason": "Закрытая закупка не возвращается в исполнение"
-    }
-  ],
   "agent": {
     "knowledgeSources": [],
     "allowedStates": [
@@ -618,25 +598,5 @@
       "action",
       "variables"
     ]
-  },
-  "gateways": {
-    "collecting": {
-      "type": "event",
-      "name": "Сбор заявок"
-    },
-    "after_deadline": {
-      "type": "exclusive",
-      "name": "Минимум набран?"
-    },
-    "ready": {
-      "type": "event",
-      "name": "Набрано, ждём запуска",
-      "assignedRole": "organizer"
-    },
-    "launched": {
-      "type": "event",
-      "name": "Исполнение сделок",
-      "assignedRole": "member"
-    }
   }
 }

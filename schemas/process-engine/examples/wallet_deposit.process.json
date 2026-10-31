@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "id": "wallet.deposit",
   "name": "Пополнение через бухгалтера",
   "description": "Заявка на пополнение кошелька или казны: заявитель прикладывает подтверждение перевода, бухгалтер подтверждает поступление или отклоняет.",
@@ -82,13 +82,13 @@
   ],
   "data": [],
   "rules": [],
-  "states": {
+  "elements": {
     "__start__": {
-      "type": "start_event",
+      "type": "startEvent",
       "description": "Заявка на пополнение создана"
     },
     "review": {
-      "type": "user_task",
+      "type": "userTask",
       "name": "Подтверждение поступления",
       "description": "Сверить сумму и подтверждение перевода, затем подтвердить или отклонить",
       "assignedRole": "accountant",
@@ -111,21 +111,19 @@
       }
     },
     "confirmed": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Подтверждено",
       "description": "Деньги зачислены",
       "final": true
     },
     "rejected": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Отклонено",
       "description": "Заявка отклонена",
       "final": true
-    }
-  },
-  "gateways": {
+    },
     "after_review": {
-      "type": "exclusive"
+      "type": "exclusiveGateway"
     }
   },
   "transitions": [

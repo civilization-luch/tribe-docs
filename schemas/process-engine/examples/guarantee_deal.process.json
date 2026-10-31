@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "id": "guarantee.deal",
   "name": "Сделка под гарантию",
   "description": "Исполнение одной сделки: поставщик принимает покрытие и блокирует депозиты, затем сделка идёт до завершения, отмены или спора. Закупка ведёт столько сделок, сколько участников запустилось.",
@@ -113,13 +113,13 @@
     }
   ],
   "rules": [],
-  "states": {
+  "elements": {
     "__start__": {
-      "type": "start_event",
+      "type": "startEvent",
       "description": "Сделка предложена"
     },
     "confirm": {
-      "type": "user_task",
+      "type": "userTask",
       "name": "Принятие сделки",
       "description": "Проверить предмет и сумму, принять покрытие или отклонить сделку",
       "assignedRole": "supplier",
@@ -142,42 +142,42 @@
       }
     },
     "execution": {
-      "type": "wait",
+      "type": "intermediateCatchEvent",
       "name": "Исполнение",
       "description": "Покрытие заблокировано; ждём завершения, отмены или спора по сделке",
       "workDistribution": {
         "performedBy": "human"
       },
-      "assignedRole": "supplier"
+      "assignedRole": "supplier",
+      "eventType": "message"
     },
     "disputed": {
-      "type": "wait",
+      "type": "intermediateCatchEvent",
       "name": "Спор",
       "description": "Сделка в споре; ждём решения",
-      "assignedRole": "supplier"
+      "assignedRole": "supplier",
+      "eventType": "message"
     },
     "completed": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Завершена",
       "description": "Исполнение подтверждено, покрытие разблокировано",
       "final": true
     },
     "cancelled": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Отменена",
       "description": "Сделка отменена, покрытие освобождено",
       "final": true
     },
     "resolved": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Решена",
       "description": "Спор разрешён",
       "final": true
-    }
-  },
-  "gateways": {
+    },
     "after_confirm": {
-      "type": "exclusive",
+      "type": "exclusiveGateway",
       "name": "Решение поставщика"
     }
   },
@@ -384,20 +384,6 @@
       ],
       "description": "Сделка отменена во время спора",
       "label": "отмена в споре"
-    }
-  ],
-  "forbidden": [
-    {
-      "id": "deny_completed_back",
-      "from": "completed",
-      "to": "execution",
-      "reason": "Завершённая сделка не возвращается в исполнение"
-    },
-    {
-      "id": "deny_cancelled_back",
-      "from": "cancelled",
-      "to": "execution",
-      "reason": "Отменённая сделка не возвращается в исполнение"
     }
   ],
   "agent": {

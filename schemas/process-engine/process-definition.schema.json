@@ -12,13 +12,14 @@
     "passport",
     "roles",
     "data",
-    "states",
+    "elements",
     "transitions"
   ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
-      "const": "0.3"
+      "const": "0.4",
+      "description": "Версия формата: 0.4 — BPMN-словарь и единая коллекция elements"
     },
     "id": {
       "type": "string",
@@ -63,17 +64,19 @@
         "$ref": "#/$defs/rule"
       }
     },
-    "states": {
+    "elements": {
       "type": "object",
+      "description": "Элементы процесса: события, задачи и развилки (BPMN flow elements)",
       "minProperties": 2,
       "additionalProperties": {
-        "$ref": "#/$defs/state"
-      }
-    },
-    "gateways": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/gateway"
+        "oneOf": [
+          {
+            "$ref": "#/$defs/state"
+          },
+          {
+            "$ref": "#/$defs/gateway"
+          }
+        ]
       }
     },
     "transitions": {
@@ -87,12 +90,6 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/timer"
-      }
-    },
-    "forbidden": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/forbiddenTransition"
       }
     },
     "agent": {
@@ -335,12 +332,20 @@
       "properties": {
         "type": {
           "enum": [
-            "start_event",
-            "end_event",
-            "wait",
-            "automated_task",
-            "user_task"
+            "startEvent",
+            "endEvent",
+            "intermediateCatchEvent",
+            "userTask",
+            "serviceTask"
           ]
+        },
+        "eventType": {
+          "enum": [
+            "message",
+            "timer",
+            "signal"
+          ],
+          "description": "Вид ожидаемого события для intermediateCatchEvent"
         },
         "name": {
           "type": "string"
@@ -401,10 +406,11 @@
       "properties": {
         "type": {
           "enum": [
-            "exclusive",
-            "event",
-            "parallel_fork",
-            "parallel_join"
+            "exclusiveGateway",
+            "eventBasedGateway",
+            "parallelGateway",
+            "parallelFork",
+            "parallelJoin"
           ]
         },
         "name": {
@@ -588,33 +594,6 @@
           "type": "string",
           "minLength": 1,
           "description": "ISO-8601 datetime or ${var} reference resolved at runtime"
-        }
-      }
-    },
-    "forbiddenTransition": {
-      "type": "object",
-      "required": [
-        "id",
-        "from",
-        "to",
-        "reason"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/id"
-        },
-        "from": {
-          "type": "string",
-          "minLength": 1
-        },
-        "to": {
-          "type": "string",
-          "minLength": 1
-        },
-        "reason": {
-          "type": "string",
-          "minLength": 1
         }
       }
     },

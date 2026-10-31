@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "id": "support.triage",
   "name": "Разбор обращения",
   "description": "Разбор обращения и работа по нему: принять, отклонить, уточнить или решить. Остальные переходы статусов выполняются в домене.",
@@ -59,13 +59,13 @@
   ],
   "data": [],
   "rules": [],
-  "states": {
+  "elements": {
     "__start__": {
-      "type": "start_event",
+      "type": "startEvent",
       "description": "Обращение создано"
     },
     "triage": {
-      "type": "user_task",
+      "type": "userTask",
       "name": "Разбор обращения",
       "description": "Принять в работу, отклонить или уточнить детали",
       "assignedRole": "support_agent",
@@ -92,15 +92,16 @@
       }
     },
     "awaiting_info": {
-      "type": "wait",
+      "type": "intermediateCatchEvent",
       "name": "Ждём ответ заявителя",
       "description": "Заявитель должен уточнить детали обращения",
       "timing": {
         "deadline": 72
-      }
+      },
+      "eventType": "message"
     },
     "working": {
-      "type": "user_task",
+      "type": "userTask",
       "name": "Работа по обращению",
       "description": "Решить обращение или отклонить",
       "assignedRole": "support_agent",
@@ -123,30 +124,28 @@
       }
     },
     "resolved": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Решено",
       "description": "Обращение решено",
       "final": true
     },
     "declined": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Отклонено",
       "description": "Обращение отклонено",
       "final": true
     },
     "closed": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Закрыто",
       "description": "Ответа не было, обращение закрыто",
       "final": true
-    }
-  },
-  "gateways": {
+    },
     "after_triage": {
-      "type": "exclusive"
+      "type": "exclusiveGateway"
     },
     "after_work": {
-      "type": "exclusive"
+      "type": "exclusiveGateway"
     }
   },
   "transitions": [

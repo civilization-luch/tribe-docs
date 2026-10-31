@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "id": "membership.onboarding",
   "name": "Онбординг участника",
   "description": "Заявка на вступление в сообщество: проверка администратором, развилка решения, одобрение, отказ или сгорание по SLA. Простой пример процесса для знакомства с движком.",
@@ -66,13 +66,13 @@
   ],
   "data": [],
   "rules": [],
-  "states": {
+  "elements": {
     "__start__": {
-      "type": "start_event",
+      "type": "startEvent",
       "description": "Заявка подана"
     },
     "review": {
-      "type": "user_task",
+      "type": "userTask",
       "name": "Проверка заявки",
       "description": "Администратор решает, принять участника или отказать",
       "assignedRole": "admin",
@@ -96,27 +96,25 @@
       }
     },
     "approved": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Одобрено",
       "description": "Участник принят в сообщество",
       "final": true
     },
     "rejected": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Отклонено",
       "description": "Заявка отклонена",
       "final": true
     },
     "expired": {
-      "type": "end_event",
+      "type": "endEvent",
       "name": "Истекло",
       "description": "Администратор не рассмотрел заявку за 72 часа, заявка снята",
       "final": true
-    }
-  },
-  "gateways": {
+    },
     "decision": {
-      "type": "exclusive"
+      "type": "exclusiveGateway"
     }
   },
   "transitions": [
