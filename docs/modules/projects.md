@@ -150,5 +150,7 @@ Issue для элементов загружаются пакетно (`get_many
 
 - Запись: команды `projects_*` блокируются, если модуль `projects` не включён в сообществе
   (`CommandProcessor.dispatch`).
-- Чтение: GraphQL-запросы `projects`, `project`, `board`, `boards` проходят проверку
-  `enforce_read_module` (`graphql/module_guards.py`) и возвращают ошибку, если модуль выключен.
+- Чтение: GraphQL-запросы `projects` и `project` проходят проверку `enforce_read_module`
+  (`graphql/module_guards.py`) и возвращают ошибку, если модуль выключен. Отдельных
+  запросов `board`/`boards` нет: канбан — это представление внутри проекта
+  (`project.views`), см. раздел «Board view».
