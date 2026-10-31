@@ -66,7 +66,8 @@
 - [Proposals](modules/proposals.md) — голосования, предложения
 - [Reputation](modules/reputation.md) — рейтинг, уровни доверия
 - [Documents](modules/documents.md) — договоры, акты, правила
-- [Workflows](modules/workflows.md) — автоматизация работы по событиям, ECA-правила и BPMN-процессы
+- [Process Engine](modules/process-engine.md) — процессы: состояния, задачи людям, таймеры, аудит
+- [Workflows](modules/workflows.md) — архив: движок автоматизации, заменён Process Engine
 
 ### Сервисы (монетизация)
 - [LMS](modules/lms.md) — курсы, обучение, сертификаты
