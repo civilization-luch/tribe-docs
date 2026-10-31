@@ -3,7 +3,7 @@
   "id": "treasury.expense",
   "name": "Расход из казны",
   "description": "Заявка на расход: проверка политики сообщества, одобрение казначея (для крупных сумм — второе одобрение администратора), оплата и подтверждение выдачи. Решения принимает процесс, домен хранит факты.",
-  "version": "2026-11-02",
+  "version": "2026-11-03",
   "contextType": "treasury_transaction",
   "host": {
     "module": "treasury",
@@ -89,10 +89,19 @@
       "name": "Казначей",
       "kind": "human",
       "responsibilities": [
-        "одобрение расхода",
+        "одобрение расхода сообщества",
         "оплата"
       ],
-      "capability": "treasury.operate",
+      "groupSetting": "wallet.accountant_group_id"
+    },
+    {
+      "id": "group_manager",
+      "name": "Руководитель группы",
+      "kind": "human",
+      "responsibilities": [
+        "одобрение расхода бюджета группы"
+      ],
+      "capability": "group.manage",
       "scopeField": "treasury_id"
     },
     {
@@ -263,6 +272,34 @@
       "name": "Выдача не подтверждена",
       "description": "Наличные выданы, но получатель не подтвердил получение в срок",
       "final": true
+    },
+    "approval_kind": {
+      "type": "exclusiveGateway",
+      "name": "Чей бюджет?",
+      "description": "Расход группы согласует руководитель группы, расход сообщества — казначей"
+    },
+    "group_approval": {
+      "type": "userTask",
+      "name": "Одобрение расхода группы",
+      "description": "Проверить назначение, получателя и документ, затем одобрить или отклонить расход бюджета группы",
+      "assignedRole": "group_manager",
+      "timing": {
+        "sla": 24,
+        "reminder": 12
+      },
+      "decisions": [
+        {
+          "id": "approve",
+          "label": "Одобрить"
+        },
+        {
+          "id": "reject",
+          "label": "Отклонить"
+        }
+      ],
+      "workDistribution": {
+        "performedBy": "human"
+      }
     }
   },
   "transitions": [
@@ -326,7 +363,7 @@
     {
       "id": "tr_needs_approval",
       "from": "policy",
-      "to": "approval",
+      "to": "approval_kind",
       "condition": {
         "all": [
           {
@@ -339,7 +376,75 @@
       "journal": [
         "timestamp"
       ],
-      "description": "Расход требует одобрения казначея"
+      "description": "Расход требует одобрения"
+    },
+    {
+      "id": "tr_group_scope",
+      "from": "approval_kind",
+      "to": "group_approval",
+      "condition": {
+        "all": [
+          {
+            "field": "group_treasury",
+            "op": "==",
+            "value": true
+          }
+        ]
+      },
+      "journal": [
+        "timestamp"
+      ],
+      "description": "Бюджет группы — решает руководитель группы"
+    },
+    {
+      "id": "tr_community_scope",
+      "from": "approval_kind",
+      "to": "approval",
+      "condition": {
+        "all": [
+          {
+            "field": "group_treasury",
+            "op": "==",
+            "value": false
+          }
+        ]
+      },
+      "journal": [
+        "timestamp"
+      ],
+      "description": "Казна сообщества — решает казначей"
+    },
+    {
+      "id": "tr_group_decided",
+      "from": "group_approval",
+      "to": "after_approval",
+      "journal": [
+        "timestamp",
+        "actor",
+        "decision"
+      ],
+      "description": "Руководитель группы принял решение"
+    },
+    {
+      "id": "tr_withdraw_group",
+      "from": "group_approval",
+      "to": "cancelled",
+      "on": {
+        "event": "TransactionCancelled"
+      },
+      "condition": {
+        "all": [
+          {
+            "field": "event.aggregate_id",
+            "op": "==",
+            "value": "${context_id}"
+          }
+        ]
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ]
     },
     {
       "id": "tr_decided",
@@ -781,7 +886,8 @@
         "amount": 5000,
         "method": "bank",
         "approval_required": true,
-        "approvals_required": 1
+        "approvals_required": 1,
+        "group_treasury": false
       },
       "when": [
         {
@@ -814,7 +920,8 @@
         "amount": 5000,
         "method": "bank",
         "approval_required": true,
-        "approvals_required": 1
+        "approvals_required": 1,
+        "group_treasury": false
       },
       "when": [
         {
@@ -843,7 +950,8 @@
         "amount": 500000,
         "method": "bank",
         "approval_required": true,
-        "approvals_required": 2
+        "approvals_required": 2,
+        "group_treasury": false
       },
       "when": [
         {
@@ -872,7 +980,8 @@
         "amount": 1000,
         "method": "bank",
         "approval_required": false,
-        "approvals_required": 1
+        "approvals_required": 1,
+        "group_treasury": false
       },
       "when": [
         {
@@ -897,7 +1006,8 @@
         "amount": 5000,
         "method": "bank",
         "approval_required": true,
-        "approvals_required": 1
+        "approvals_required": 1,
+        "group_treasury": false
       },
       "when": [
         {
@@ -919,6 +1029,32 @@
       "then": {
         "state": "cancelled",
         "status": "completed"
+      }
+    },
+    {
+      "id": "t_group_budget_goes_to_group_manager",
+      "description": "Расход бюджета группы уходит руководителю группы",
+      "given": {
+        "context_id": "txn-6",
+        "amount": 5000,
+        "method": "bank",
+        "approval_required": true,
+        "approvals_required": 1,
+        "group_treasury": true
+      },
+      "when": [
+        {
+          "event": "TransactionCreated",
+          "aggregate_id": "txn-6",
+          "payload": {
+            "type": "withdrawal",
+            "status": "pending_approval"
+          }
+        }
+      ],
+      "then": {
+        "state": "group_approval",
+        "status": "awaiting_user"
       }
     }
   ],
