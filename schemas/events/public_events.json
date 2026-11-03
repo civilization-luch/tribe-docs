@@ -204,6 +204,14 @@
         "status": "string",
         "reason": "string"
       }
+    },
+    "SupportRequestReopened": {
+      "module": "support",
+      "version": 1,
+      "payload": {
+        "community_id": "string",
+        "author_id": "string"
+      }
     }
   }
 }

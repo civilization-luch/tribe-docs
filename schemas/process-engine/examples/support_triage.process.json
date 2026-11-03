@@ -3,7 +3,7 @@
   "id": "support.triage",
   "name": "Разбор обращения",
   "description": "Разбор обращения и работа по нему: принять, отклонить, уточнить или решить. Остальные переходы статусов выполняются в домене.",
-  "version": "2026-10-31",
+  "version": "2026-11-03",
   "contextType": "support_request",
   "host": {
     "module": "support",
@@ -163,6 +163,19 @@
         "event"
       ],
       "description": "Новое обращение поступило на разбор"
+    },
+    {
+      "id": "tr_reopen",
+      "from": "__start__",
+      "to": "triage",
+      "on": {
+        "event": "SupportRequestReopened"
+      },
+      "journal": [
+        "timestamp",
+        "event"
+      ],
+      "description": "Заявитель ответил в закрытом обращении — новый разбор"
     },
     {
       "id": "tr_decide",
