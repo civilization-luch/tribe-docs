@@ -7,7 +7,7 @@ route_override: true
 screen: Закупки
 preconditions:
   - закупки живут в сообществе и открываются по адресу /community/:id/purchases
-  - у организатора есть доступ в сообщество; поставщик выбирается из участников — на стенде это Demo Member
+  - у организатора есть доступ в сообщество; поставщик выбирается из участников через поиск по имени или адресу
   - запуск закупки, порог и сделки не проверяются: для них нужен сид покрытия
 cast:
   organizer:
@@ -41,7 +41,7 @@ clips:
         caption: Поставщику не нужно вступать в сообщество
       - screen: гарантии
         path: /finance/guarantees
-        caption: Поручитель отвечает деньгами, а не обещанием
+        caption: Деньги держит поручитель, пока сделка не закрыта
   - id: organizer
     as: organizer
     title: Организатор объявляет закупку
@@ -57,11 +57,11 @@ clips:
         guide: Название — по нему участники находят закупку
       - do: fill
         target: { i18n: guarantee.purchaseSupplierPlaceholder }
-        value: "Demo Member"
-        guide: Найдите поставщика по имени — это тот, кому заплатят
+        value: "member"
+        guide: Найдите поставщика по имени или адресу — это тот, кому заплатят
         caption: Поставщик в списке, вступать в сообщество не нужно
       - do: click
-        target: { text: "Demo Member" }
+        target: { css: ".user-picker__item" }
         within: dialog
         guide: Выберите поставщика из подсказки
       - do: fill
