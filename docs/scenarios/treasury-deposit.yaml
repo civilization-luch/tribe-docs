@@ -1,0 +1,34 @@
+id: treasury-deposit
+module: treasury
+title: Пополнить казну
+goal: Показать, что деньги сообщества приходят в казну с документом, а не «просто суммой».
+route: /community/:id/treasury
+preconditions:
+  - модуль «Казна» включён в сообществе
+  - роль владельца или казначея — иначе кнопки внесения нет
+steps:
+  - do: click
+    target: { i18n: treasury.deposit }
+    expect: { i18n: treasury.amountPlaceholder }
+    guide: Нажмите «Внести в казну»
+    caption: Казна — общий счёт сообщества
+  - do: fill
+    target: { i18n: treasury.amountPlaceholder }
+    value: "100"
+    guide: Укажите сумму — она попадёт в баланс сразу
+  - do: fill
+    target: { i18n: treasury.docNumberPlaceholder }
+    value: "СЦ-{{now}}"
+    guide: Номер платёжного поручения обязателен для банковского перевода
+    caption: Каждое поступление подтверждается документом
+  - do: fill
+    target: { i18n: treasury.docDatePlaceholder }
+    value: "{{today}}"
+    guide: Дата документа — обычно день платежа
+  - do: click
+    target: { i18n: treasury.deposit }
+    within: dialog
+    guide: Нажмите «Внести в казну» в форме
+  - do: expect_text
+    target: { text: "СЦ-{{now}}" }
+    guide: Проверьте, что проводка появилась в списке операций

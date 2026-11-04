@@ -1,0 +1,50 @@
+id: support-reply
+module: support
+title: Ответить на обращение и взять его в работу
+goal: "Показать путь обращения: входящие, публичный ответ, задача процесса вместо выпадающего статуса."
+route: /community/:id/support/inbox
+preconditions:
+  - модуль «Поддержка» включён в сообществе
+  - если в сообществе работает процесс разбора, статус меняется решением в задаче процесса; без процесса — выпадающим списком на странице обращения
+prepare:
+  - query: |
+      mutation ($input: CreateSupportRequestInput!) {
+        createSupportRequest(input: $input) { id title }
+      }
+    variables:
+      input:
+        communityId: "{{community_id}}"
+        title: "Сквозной сценарий {{now}}"
+        body: "Обращение создано проверочным сценарием."
+steps:
+  - do: click
+    target: { text: "Сквозной сценарий {{now}}" }
+    expect: { i18n: support.replyPlaceholder }
+    guide: Откройте обращение из входящих
+    caption: Входящие — очередь обращений сообщества
+  - do: fill
+    target: { i18n: support.replyPlaceholder }
+    value: "Проверка сценария {{now}}"
+    guide: Напишите ответ — человек увидит его в истории обращения
+    caption: Ответ публичный, внутренние заметки помечаются отдельно
+  - do: click
+    target: { i18n: support.send }
+    guide: Нажмите «Отправить»
+  - do: expect_text
+    target: { text: "Проверка сценария {{now}}" }
+    guide: Ответ появился в истории
+  - do: click
+    target: { text: "Решить в задаче процесса" }
+    expect: { text: "Разбор обращения" }
+    guide: Решение принимается в задаче процесса, а не на странице обращения
+    caption: Процесс сам меняет статус обращения
+  - do: click
+    target: { text: "Принять" }
+    guide: Нажмите «Принять» — обращение переходит в работу
+  - do: goto
+    path: /community/:id/support/inbox
+    guide: Вернитесь во входящие — обращение уже не новое
+  - do: click
+    target: { text: "Сквозной сценарий {{now}}" }
+    expect: { i18n: support.status.in_progress }
+    guide: Статус сменился на «В работе», и это сделал процесс

@@ -1,0 +1,65 @@
+id: projects-add-issue
+module: projects
+title: Создать задачу в проекте и добавить существующую
+goal: Ответ на частый вопрос — как завести задачу внутри проекта и как подтянуть в проект задачу, созданную раньше.
+route: /community/:id/projects
+preconditions:
+  - модуль «Проекты» включён в сообществе
+  - в сообществе есть хотя бы одна задача вне проекта (для второй половины сценария)
+steps:
+  - do: click
+    target: { i18n: project.newProject }
+    expect: { i18n: community.boardName }
+    guide: Нажмите «Новый проект»
+    caption: Проект собирает задачи из разных мест
+  - do: fill
+    target: { i18n: community.boardName }
+    value: "Проект {{now}}"
+    guide: Введите название проекта
+  - do: click
+    target: { i18n: community.create }
+    within: dialog
+    guide: Нажмите «Создать»
+  - do: click
+    target: { text: "Проект {{now}}" }
+    expect: { text: "Нет задач" }
+    guide: Откройте созданный проект
+    caption: Внутри проекта — колонки по статусам
+  - do: click
+    target: { css: ".column__add-btn" }
+    guide: Нажмите «+» в колонке, чтобы добавить задачу
+  - do: click
+    target: { i18n: project.newIssue }
+    expect: { i18n: issue.titlePlaceholder }
+    guide: Выберите «Новая задача» — она сразу попадёт в проект
+    caption: Новая задача создаётся уже внутри проекта
+  - do: fill
+    target: { i18n: issue.titlePlaceholder }
+    value: "Задача {{now}}"
+    guide: Введите заголовок задачи
+  - do: click
+    target: { i18n: project.create }
+    within: dialog
+    guide: Нажмите «Создать»
+  - do: expect_text
+    target: { text: "Задача {{now}}" }
+    guide: Задача появилась в колонке
+  - do: click
+    target: { css: ".column__add-btn" }
+    guide: Теперь добавим задачу, созданную раньше — снова «+» в колонке
+  - do: click
+    target: { i18n: project.addIssue }
+    expect: { i18n: project.searchIssues }
+    guide: Выберите «Добавить существующую задачу»
+    caption: В проект попадает задача из любого доступного воркспейса
+  - do: fill
+    target: { i18n: project.searchIssues }
+    value: "Смоук"
+    guide: Начните вводить название — поиск идёт по всем задачам сообщества
+  - do: click
+    target: { i18n: project.add }
+    within: dialog
+    guide: Нажмите «Добавить» у нужной задачи
+  - do: expect_text
+    target: { text: "Смоук community" }
+    guide: Задача появилась в проекте — доступ к самой задаче не изменился
