@@ -1,13 +1,13 @@
 # Сценарии
 
-Один файл — три артефакта: пошаговый гайд модуля, e2e-прогон на стенде и раскадровка ролика. Сценарий описывает то, что человек делает руками; кода он не знает.
+Один файл — три артефакта: пошаговый гайд модуля, прогон в браузере и раскадровка ролика. Сценарий описывает то, что человек делает руками; кода он не знает.
 
 ```
 tribe-docs/docs/scenarios/<module>.yaml
         │
         ├── tribe-docs/docs/modules/<module>.md      блок «Сценарии» в гайде
         ├── apps/tribe-front/tests/scenarios          прогон в браузере
-        └── tribe-video/storyboards/<id>.md|json     раскадровка ролика
+        └── tribe-video/storyboards/<id>.md|json     раскадровка роликов
 ```
 
 ## Зачем
@@ -22,27 +22,45 @@ module: treasury                # id из src/tribe_engine/modules/definitions
 title: Пополнить казну
 goal: Что показывает сценарий и зачем он нужен
 route: /community/:id/treasury  # начинается с маршрута модуля
+screen: Казна                   # необязательно: как экран называется в раскадровке
 
 preconditions:                  # что должно быть готово на стенде
   - модуль «Казна» включён в сообществе
 
-prepare:                        # необязательно: данные, которые создаёт сам прогон
-  - query: |
-      mutation ($input: CreateSupportRequestInput!) {
-        createSupportRequest(input: $input) { id title }
-      }
-    variables:
-      input:
-        communityId: "{{community_id}}"
-        title: "Сквозной сценарий {{now}}"
-
-steps:
+steps:                          # короткая форма: один клип, один аккаунт
   - do: click
-    target: { i18n: treasury.deposit }   # ключ из ru.json — метка и селектор сразу
-    expect: { i18n: treasury.amountPlaceholder }
-    guide: Нажмите «Внести в казну»       # строка для гайда, пишется руками
-    caption: Казна — общий счёт сообщества # титр для видео, необязательно
+    target: { i18n: treasury.deposit }
+    guide: Нажмите «Внести в казну»
 ```
+
+## Много ролей: `cast` и `clips`
+
+Когда в сценарии участвуют несколько человек (закупка, сделка, заявка), он раскладывается на клипы. Клип — это либо последовательность шагов от лица одного аккаунта, либо интро, где шагов нет.
+
+```yaml
+cast:
+  organizer:   { label: Demo User, email: demo@local.test, password: ..., role: организатор, community: onboarding-demo }
+  participant: { label: Applicant Two, email: applicant2@local.test, password: ..., role: участник }
+
+clips:
+  - id: roles          # интро: кадры и титры, кликать нечего
+    kind: intro
+    title: Кто в сделке
+    shots:
+      - screen: главная сообщества
+        path: /community/:id
+        caption: Сообщество решило купить кофе вместе
+
+  - id: organizer
+    as: organizer
+    title: Организатор объявляет закупку
+    steps:
+      - do: click
+        target: { testid: purchase-create }
+        guide: Нажмите «Создать закупку»
+```
+
+Раннер открывает по браузерному контексту на аккаунт, поэтому данные переходят из клипа в клип: организатор создаёт закупку, участник её видит. Интро не прокликивается — проверяется, что каждый кадр открывает непустой экран.
 
 ### Действия
 
@@ -67,13 +85,36 @@ steps:
 
 ### Подстановки
 
-`{{now}}` — метка запуска, `{{today}}` — дата, `{{community}}` — слаг сообщества, `{{community_id}}` — его id (нужен в GraphQL, где ждут id).
+`{{now}}` — метка запуска, `{{today}}` — дата, `{{today+14}}` — через две недели, `{{today+14.ru}}` — то же в формате `дд.мм.гггг`, `{{community}}` — слаг сообщества, `{{community_id}}` — его id (нужен в GraphQL, где ждут id).
+
+### `prepare`
+
+Данные, которые прогон создаёт сам, чтобы не зависеть от предыдущего запуска:
+
+```yaml
+prepare:
+  - query: |
+      mutation ($input: CreateSupportRequestInput!) { createSupportRequest(input: $input) { id } }
+    variables:
+      input: { communityId: "{{community_id}}", title: "Сквозной сценарий {{now}}" }
+```
+
+`as:` у подготовки выбирает аккаунт из `cast`.
+
+### Маршрут не модуля
+
+Закупки живут в сообществе, но отдельного модуля у них нет. Тогда маршрут объявляется явно:
+
+```yaml
+route: /community/:id/purchases
+route_override: true
+```
 
 ## Как прогнать
 
 ```bash
-make check-scenarios    # схема, ключи i18n, маршруты модулей
-make test-scenarios     # вход demo@local.test на localhost:5175 и проход шагов
+make check-scenarios    # схема, ключи i18n, маршруты модулей, роли клипов
+make test-scenarios     # вход на аккаунты стенда и проход клипов
 make storyboards        # раскадровки в tribe-video/storyboards
 ```
 
@@ -83,7 +124,8 @@ make storyboards        # раскадровки в tribe-video/storyboards
 
 ## Правила
 
-- Сценарий повторяемый: нужные данные создаёт `prepare`, а не человек перед прогоном.
+- Сценарий повторяемый: нужные данные создаёт `prepare` или первый клип, а не человек перед прогоном.
 - В сценарии нет бизнес-логики и API-вызовов, кроме `prepare`.
 - `guide` пишется для человека, а не пересказывает `target`.
+- Интро — это кадры, а не шаги: если в кадре нужно кликнуть, это уже не интро.
 - Если шаг нельзя проверить в UI — его нет в сценарии; про такое пишут в гайде словами.

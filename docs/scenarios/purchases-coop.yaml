@@ -1,0 +1,111 @@
+id: purchases-coop
+module: guarantee
+title: Закупка от объявления до заявки
+goal: "Показать сделку целиком: организатор объявляет условия, участник заявляет долю, поставщику не нужно вступать в сообщество, поручитель отвечает деньгами."
+route: /community/:id/purchases
+route_override: true
+screen: Закупки
+preconditions:
+  - закупки живут в сообществе и открываются по адресу /community/:id/purchases
+  - у организатора есть доступ в сообщество; поставщик выбирается из участников — на стенде это Demo Member
+  - запуск закупки, порог и сделки не проверяются: для них нужен сид покрытия
+cast:
+  organizer:
+    label: Demo User
+    email: demo@local.test
+    password: demo12345!
+    role: организатор
+    community: onboarding-demo
+  participant:
+    label: Applicant Two
+    email: applicant2@local.test
+    password: demo12345!
+    role: участник
+    community: onboarding-demo
+clips:
+  - id: roles
+    kind: intro
+    title: Кто в сделке
+    shots:
+      - screen: главная сообщества
+        path: /community/:id
+        caption: Сообщество решило купить кофе вместе
+      - screen: закупки сообщества
+        path: /community/:id/purchases
+        caption: Организатор объявляет объём, цену и срок
+      - screen: карточка закупки
+        path: /community/:id/purchases
+        caption: Участник заявляет долю — это объём, а не платёж
+      - screen: строка «Организатор → Поставщик»
+        path: /community/:id/purchases
+        caption: Поставщику не нужно вступать в сообщество
+      - screen: гарантии
+        path: /finance/guarantees
+        caption: Поручитель отвечает деньгами, а не обещанием
+  - id: organizer
+    as: organizer
+    title: Организатор объявляет закупку
+    steps:
+      - do: click
+        target: { testid: purchase-create }
+        expect: { i18n: guarantee.purchaseTitle }
+        guide: Нажмите «Создать закупку»
+        caption: Закупка живёт в сообществе
+      - do: fill
+        target: { i18n: guarantee.purchaseTitle }
+        value: "Кофе, {{now}}"
+        guide: Название — по нему участники находят закупку
+      - do: fill
+        target: { i18n: guarantee.purchaseSupplierPlaceholder }
+        value: "Demo Member"
+        guide: Найдите поставщика по имени — это тот, кому заплатят
+        caption: Поставщик в списке, вступать в сообщество не нужно
+      - do: click
+        target: { text: "Demo Member" }
+        within: dialog
+        guide: Выберите поставщика из подсказки
+      - do: fill
+        target: { i18n: guarantee.purchaseMin }
+        value: "200"
+        guide: "Минимальный объём — порог: не набрали, закупка не состоится"
+      - do: fill
+        target: { i18n: guarantee.purchaseMax }
+        value: "400"
+        guide: Максимальный объём ограничивает общий сбор
+      - do: fill
+        target: { i18n: guarantee.purchaseAdvance }
+        value: "30"
+        guide: Предоплата объявлена заранее — 30% до поставки
+        caption: Аванс виден участнику до подачи заявки
+      - do: fill
+        target: { testid: purchase-deadline }
+        value: "{{today+14.ru}}"
+        guide: Срок сбора — после этой даты заявки не принимаются
+      - do: click
+        target: { i18n: guarantee.submit }
+        within: dialog
+        guide: Нажмите «Отправить» — закупка открывается для заявок
+      - do: expect_text
+        target: { text: "Кофе, {{now}}" }
+        guide: Закупка появилась в списке со своими условиями
+  - id: participant
+    as: participant
+    title: Участник заявляет долю
+    steps:
+      - do: click
+        target: { testid: purchase-apply }
+        expect: { i18n: guarantee.purchaseApplyAmount }
+        guide: Нажмите «Подать заявку» в карточке закупки
+        caption: Заявка — это объём, а не платёж
+      - do: fill
+        target: { testid: application-amount }
+        value: "100"
+        guide: Укажите свою долю — сумма в пределах лимита на участника
+      - do: click
+        target: { i18n: guarantee.submit }
+        within: dialog
+        expect: { i18n: guarantee.purchaseAppliedNotice }
+        guide: Нажмите «Отправить» — заявка ждёт запуска
+      - do: expect_text
+        target: { text: "Ваша заявка" }
+        guide: В карточке видно вашу заявку и сколько уже собрано
