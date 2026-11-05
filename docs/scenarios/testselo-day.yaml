@@ -1,0 +1,81 @@
+id: testselo-day
+module: treasury
+title: День в поселении
+goal: "Показать, что поселение живёт в сообществе, а не в карточке каталога: кандидат ждёт решения, казна считает взносы, соседи собирают деньги на воду, решение выносится на голосование."
+route: /community/:id/treasury
+route_override: true
+screen: Тестсело
+preconditions:
+  - сообщество testselo засеяно скриптом setup/seed-testselo.py
+  - у управляющего есть роль владельца, иначе нет доступа к заявкам
+  - суммы в казне указаны в POINT — внутренней единице поселения
+cast:
+  managing:
+    label: Анна Соколова
+    email: demo@local.test
+    password: demo12345!
+    role: управляющий
+    community: testselo
+clips:
+  - id: residents
+    as: managing
+    title: Кого принимают в поселение
+    steps:
+      - do: goto
+        path: /community/:id/members
+        caption: Участники поселения и те, кто просится внутрь
+      - do: expect_text
+        target: { text: "Ожидающие запросы" }
+        guide: Откройте «Участники» — заявки лежат отдельным списком
+        caption: Вступление — решение поселения, а не регистрация
+      - do: expect_text
+        target: { text: "Илья Ким" }
+        guide: Кандидат виден по имени, с пометкой «заявитель»
+  - id: treasury
+    as: managing
+    title: Паевые взносы в казне
+    steps:
+      - do: goto
+        path: /community/:id/treasury
+        caption: Казна — общий счёт поселения
+      - do: expect_text
+        target: { text: "Паевые взносы, ноябрь" }
+        guide: Проводка приходит с документом, а не «просто суммой»
+        caption: У каждого поступления есть основание
+  - id: purchase
+    as: managing
+    title: Вода к общему дому
+    steps:
+      - do: goto
+        path: /community/:id/purchases
+        caption: Закупка живёт в сообществе, а не в переписке
+      - do: expect_text
+        target: { text: "Вода к общему дому" }
+        guide: Соседи видят объём, срок и того, кто поставляет
+      - do: expect_text
+        target: { text: "Собрано" }
+        guide: Собранная сумма показывает, набрался ли минимум
+        caption: Доли участников складываются в общий объём
+  - id: decision
+    as: managing
+    title: Решение вынесено на голосование
+    steps:
+      - do: goto
+        path: /community/:id/proposals
+        caption: Вопросы поселения решаются голосованием
+      - do: expect_text
+        target: { text: "Провести воду к общему дому до зимы" }
+        guide: Предложение видно всем участникам, а не только автору
+      - do: expect_text
+        target: { text: "голосов" }
+        guide: Счётчик показывает, сколько соседей уже высказались
+  - id: home
+    as: managing
+    title: Поселение целиком
+    steps:
+      - do: goto
+        path: /community/:id
+        caption: Участники, казна, предложения — на одном экране
+      - do: expect_text
+        target: { text: "Тестсело" }
+        guide: Отсюда видно, что происходит в поселении сейчас
