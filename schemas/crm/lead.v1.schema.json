@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tribe.partnr.icu/schemas/crm/lead.v1.schema.json",
+  "title": "Lead handoff v1",
+  "description": "Payload of POST /v1/handoffs. Authenticated with X-API-Key and Idempotency-Key. The receiving side creates its own lead and returns localId.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "occurredAt",
+    "person",
+    "source",
+    "intent",
+    "target",
+    "consent",
+    "retentionUntil",
+    "piiMode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "lead/v1"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tribeUserId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "externalId": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "channels": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": ["email", "phone", "telegram", "other"]
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "hash": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "oneOf": [
+              { "required": ["hash"] },
+              { "required": ["value"] }
+            ]
+          }
+        }
+      },
+      "anyOf": [
+        { "required": ["tribeUserId"] },
+        { "required": ["externalId"] },
+        { "required": ["channels"] }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system"],
+      "properties": {
+        "system": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "channel": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "campaign": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "url": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "intent": {
+      "enum": [
+        "become_partner",
+        "enroll_course",
+        "join_community",
+        "buy_service"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system"],
+      "properties": {
+        "system": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "type": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "at"],
+      "properties": {
+        "basis": {
+          "enum": ["explicit", "contract", "legitimate"]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "textVersion": {
+          "type": "string",
+          "maxLength": 32
+        }
+      }
+    },
+    "retentionUntil": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "piiMode": {
+      "enum": ["inline", "reference"],
+      "description": "inline sends contact values; reference sends only hashes and identifiers."
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "originSystem": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "originId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "contextUrl": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "externalRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 120
+        }
+      }
+    }
+  }
+}

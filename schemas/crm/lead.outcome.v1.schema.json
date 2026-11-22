@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tribe.partnr.icu/schemas/crm/lead.outcome.v1.schema.json",
+  "title": "Lead outcome v1",
+  "description": "Outbox webhook sent by Partner Network after a lead changes stage. The envelope is shared by all events; data follows $defs/data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "type", "tenantId", "occurredAt", "data"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "maxLength": 26
+    },
+    "type": {
+      "const": "lead.outcome"
+    },
+    "tenantId": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "$ref": "#/$defs/data"
+    }
+  },
+  "$defs": {
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leadId", "outcome", "stage", "occurredAt"],
+      "properties": {
+        "leadId": {
+          "type": "string",
+          "maxLength": 26
+        },
+        "outcome": {
+          "enum": ["stage_changed", "won", "lost", "dropped"]
+        },
+        "stage": {
+          "enum": [
+            "new",
+            "contacted",
+            "qualified",
+            "invited",
+            "joined",
+            "declined"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tribeUserId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "externalAccountId": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "externalRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "system": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        }
+      }
+    }
+  }
+}
