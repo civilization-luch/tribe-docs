@@ -48,7 +48,12 @@
             "additionalProperties": false,
             "properties": {
               "type": {
-                "enum": ["email", "phone", "telegram", "other"]
+                "enum": [
+                  "email",
+                  "phone",
+                  "telegram",
+                  "other"
+                ]
               },
               "value": {
                 "type": "string",
@@ -60,22 +65,44 @@
               }
             },
             "oneOf": [
-              { "required": ["hash"] },
-              { "required": ["value"] }
+              {
+                "required": [
+                  "hash"
+                ]
+              },
+              {
+                "required": [
+                  "value"
+                ]
+              }
             ]
           }
         }
       },
       "anyOf": [
-        { "required": ["tribeUserId"] },
-        { "required": ["externalId"] },
-        { "required": ["channels"] }
+        {
+          "required": [
+            "tribeUserId"
+          ]
+        },
+        {
+          "required": [
+            "externalId"
+          ]
+        },
+        {
+          "required": [
+            "channels"
+          ]
+        }
       ]
     },
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["system"],
+      "required": [
+        "system"
+      ],
       "properties": {
         "system": {
           "type": "string",
@@ -106,7 +133,9 @@
     "target": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["system"],
+      "required": [
+        "system"
+      ],
       "properties": {
         "system": {
           "type": "string",
@@ -125,10 +154,17 @@
     "consent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["basis", "at"],
+      "required": [
+        "basis",
+        "at"
+      ],
       "properties": {
         "basis": {
-          "enum": ["explicit", "contract", "legitimate"]
+          "enum": [
+            "explicit",
+            "contract",
+            "legitimate"
+          ]
         },
         "at": {
           "type": "string",
@@ -145,7 +181,10 @@
       "format": "date-time"
     },
     "piiMode": {
-      "enum": ["inline", "reference"],
+      "enum": [
+        "inline",
+        "reference"
+      ],
       "description": "inline sends contact values; reference sends only hashes and identifiers."
     },
     "links": {
@@ -179,6 +218,11 @@
           "maxLength": 120
         }
       }
+    },
+    "serviceId": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Услуга или продукт, на который пришла заявка. Идентификатор из каталога тенанта или внешней системы."
     }
   }
 }
